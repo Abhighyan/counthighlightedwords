@@ -11,7 +11,7 @@ ALLOWED_EXTENSIONS = {'docx'}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# Function to count highlighted words (from earlier)
+# Function to count highlighted words
 def count_highlighted_words(docx_file):
     doc = Document(docx_file)
     highlighted_words = 0
@@ -43,4 +43,6 @@ def upload_and_count():
     return "Invalid file type. Please upload a .docx file."
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Use the PORT environment variable provided by Railway
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
