@@ -106,34 +106,17 @@
             display: none;
             animation: fadeIn 0.5s ease-out;
         }
-        .sentiment-info h3 {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-            margin-top: 0;
-        }
-        .sentiment-info p {
-            margin: 10px 0;
-            color: #666;
-        }
         .number-line {
             position: relative;
-            height: 10px;
-            background-color: #ddd;
+            height: 20px;
             margin-top: 10px;
-            margin-bottom: 10px;
+            background-color: #e0e0e0;
         }
         .marker {
             position: absolute;
-            height: 10px;
+            width: 2px;
+            height: 20px;
             background-color: #0056b3;
-            top: 0;
-        }
-        .marker.polarity {
-            left: 50%;
-        }
-        .marker.subjectivity {
-            left: 75%;
         }
         @keyframes fadeIn {
             from { opacity: 0; }
@@ -163,11 +146,11 @@
             <h3>Understanding Sentiment Analysis</h3>
             <p><strong>Polarity:</strong> <span id="polarity-value">0.00</span></p>
             <div class="number-line">
-                <div class="marker polarity" id="polarity-marker" style="left: 50%;"></div>
+                <div id="polarity-marker" class="marker"></div>
             </div>
             <p><strong>Subjectivity:</strong> <span id="subjectivity-value">0.00</span></p>
             <div class="number-line">
-                <div class="marker subjectivity" id="subjectivity-marker" style="left: 75%;"></div>
+                <div id="subjectivity-marker" class="marker"></div>
             </div>
         </div>
     </div>
@@ -252,41 +235,51 @@
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok.');
+                }
+                return response.json();
+            })
             .then(data => {
                 progressContainer.style.display = 'none';
                 if (data.status === 'success') {
                     showResults(data);
                 } else {
-                    showMessage(data.message, 'error');
+                    showMessage(data.message || 'An error occurred during the analysis.', 'error');
                 }
             })
             .catch(error => {
                 progressContainer.style.display = 'none';
-                showMessage('An error occurred during the analysis.', 'error');
+                showMessage('An error occurred during the upload: ' + error.message, 'error');
             });
         }
 
         function showResults(data) {
-            resultContainer.innerHTML = `<h3>Analysis Results</h3>
-            <p><strong>Word Count:</strong> ${data.word_count}</p>
-            <p><strong>Highlighted Text:</strong> ${data.highlighted_text}</p>`;
-            updateSentiment(data.sentiment);
+            resultContainer.innerHTML = `
+                <div class="success-message">
+                    <h3>Analysis Results</h3>
+                    <p>Total words: ${data.word_count}</p>
+                    <p>Highlighted text: ${data.highlighted_text}</p>
+                </div>
+            `;
+            displaySentiment(data.sentiment);
         }
 
-        function updateSentiment(sentiment) {
+        function displaySentiment(sentiment) {
             polarityValue.textContent = sentiment.polarity.toFixed(2);
             subjectivityValue.textContent = sentiment.subjectivity.toFixed(2);
-            polarityMarker.style.left = `${(sentiment.polarity + 1) * 50}%`; // Adjusted for visualization
-            subjectivityMarker.style.left = `${(sentiment.subjectivity) * 100}%`; // Adjusted for visualization
+            polarityMarker.style.left = `${(sentiment.polarity + 1) * 50}%`;
+            subjectivityMarker.style.left = `${(sentiment.subjectivity) * 100}%`;
             sentimentInfo.style.display = 'block';
         }
 
         function showMessage(message, type) {
-            const messageBox = type === 'error' ? 
-                `<div class="error-message">${message}</div>` : 
-                `<div class="success-message">${message}</div>`;
-            resultContainer.innerHTML = messageBox;
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type === 'error' ? 'error-message' : 'success-message';
+            messageDiv.textContent = message;
+            resultContainer.innerHTML = '';  // Clear previous results
+            resultContainer.appendChild(messageDiv);
         }
     </script>
 </body>
