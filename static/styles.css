@@ -129,3 +129,38 @@ h1 {
 .subjective {
     background-color: #6f42c1; /* purple */
 }
+
+
+.sentiment-bar {
+    height: 8px;
+    border-radius: 4px;
+    margin: 5px 0;
+}
+
+.polarity-positive {
+    background-color: #4caf50; /* Green */
+}
+
+.polarity-negative {
+    background-color: #f44336; /* Red */
+}
+
+.polarity-neutral {
+    background-color: #2196F3; /* Blue */
+}
+
+.subjectivity-high {
+    background-color: #ff9800; /* Amber */
+}
+
+.subjectivity-medium {
+    background-color: #ffeb3b; /* Yellow */
+}
+
+.subjectivity-low {
+    background-color: #8bc34a; /* Light Green */
+}
+
+.subjectivity-very-low {
+    background-color: #cddc39; /* Lime */
+}
