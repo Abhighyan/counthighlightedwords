@@ -32,13 +32,7 @@ def perform_sentiment_analysis(docx_file):
     doc = Document(docx_file)
     full_text = ' '.join(para.text for para in doc.paragraphs)
     blob = TextBlob(full_text)
-    return {
-        "polarity": blob.sentiment.polarity,
-        "subjectivity": blob.sentiment.subjectivity,
-        "positive": sum(1 for word in full_text.split() if TextBlob(word).sentiment.polarity > 0),
-        "negative": sum(1 for word in full_text.split() if TextBlob(word).sentiment.polarity < 0),
-        "neutral": sum(1 for word in full_text.split() if TextBlob(word).sentiment.polarity == 0),
-    }
+    return blob.sentiment.polarity, blob.sentiment.subjectivity
 
 @app.route('/')
 def upload_file():
@@ -64,7 +58,7 @@ def upload_and_count():
         
         try:
             highlighted_word_count, color_counts, full_word_count = count_highlighted_words(file_path)
-            sentiment_data = perform_sentiment_analysis(file_path)
+            polarity, subjectivity = perform_sentiment_analysis(file_path)
         except Exception as e:
             os.remove(file_path)
             return jsonify(status='error', message=f"Error processing file: {str(e)}")
@@ -72,14 +66,15 @@ def upload_and_count():
         os.remove(file_path)
         
         color_percentage_details = "<br>".join([f"Highlighted in {color}: {count} words ({(count / full_word_count * 100):.2f}% of total)"
-                                                 for color, count in color_counts.items()])
+                                                  for color, count in color_counts.items()])
         highlighted_word_percentage = (highlighted_word_count / full_word_count * 100) if full_word_count else 0
         
         return jsonify(status='success', 
                        full_word_count=full_word_count, 
                        highlighted_word_count=highlighted_word_count,
                        highlighted_word_percentage=highlighted_word_percentage,
-                       sentiment_data=sentiment_data,
+                       polarity=polarity,
+                       subjectivity=subjectivity,
                        color_percentage_details=color_percentage_details)
     
     return jsonify(status='error', message="Invalid file type. Please upload a .docx file.")
