@@ -36,24 +36,25 @@
             };
 
             xhr.onload = function() {
-                if (xhr.status === 200) {
-                    const response = JSON.parse(xhr.responseText);
-                    if (response.status === 'success') {
-                        document.getElementById('upload-result').innerHTML = `
-                            <div class="success-message">
-                                <h3>Upload Successful!</h3>
-                                <p>Full word count: ${response.full_word_count}</p>
-                                <p>Number of highlighted words: ${response.highlighted_word_count} (${response.highlighted_word_percentage.toFixed(2)}% of total)</p>
-                                <p>${response.color_percentage_details}</p>
-                            </div>
-                        `;
-                        document.getElementById('upload-area').style.backgroundColor = '#e9f9e4'; // Light green background
-                    } else {
-                        document.getElementById('upload-result').innerHTML = `<div class="error-message">${response.message}</div>`;
-                    }
+                const response = JSON.parse(xhr.responseText);
+                if (response.status === 'success') {
+                    document.getElementById('upload-result').innerHTML = `
+                        <div class="success-message">
+                            <h3>Upload Successful!</h3>
+                            <p>Full word count: ${response.full_word_count}</p>
+                            <p>Number of highlighted words: ${response.highlighted_word_count} (${response.highlighted_word_percentage.toFixed(2)}% of total)</p>
+                            <p>${response.color_percentage_details}</p>
+                        </div>
+                    `;
+                    document.getElementById('upload-area').style.backgroundColor = '#e9f9e4'; // Light green background
                 } else {
-                    document.getElementById('upload-result').innerHTML = '<div class="error-message">An error occurred during the upload.</div>';
+                    document.getElementById('upload-result').innerHTML = `<div class="error-message">${response.message}</div>`;
                 }
+                document.getElementById('progress-bar').style.display = 'none';
+            };
+
+            xhr.onerror = function() {
+                document.getElementById('upload-result').innerHTML = '<div class="error-message">An error occurred during the upload.</div>';
                 document.getElementById('progress-bar').style.display = 'none';
             };
 
@@ -69,7 +70,8 @@
             <p>Drag and drop your file here or <span class="file-upload-text">select from device</span></p>
         </div>
         <div id="progress-bar" class="progress-bar" style="display: none;"></div>
-        <button class="submit-button" onclick="document.getElementById('file-input').click();">Upload</button>
+        <button class="submit-button" onclick="document.getElementById('file-input').click();">Select File</button>
+        <button class="submit-button" onclick="handleFileUpload(event);">Upload</button>
         <div id="upload-result"></div>
     </div>
 </body>
