@@ -4,7 +4,6 @@ from textblob import TextBlob
 import os
 from werkzeug.utils import secure_filename
 
-
 app = Flask(__name__)
 
 ALLOWED_EXTENSIONS = {'docx'}
@@ -33,7 +32,21 @@ def perform_sentiment_analysis(docx_file):
     doc = Document(docx_file)
     full_text = ' '.join(para.text for para in doc.paragraphs)
     blob = TextBlob(full_text)
-    return blob.sentiment.polarity, blob.sentiment.subjectivity
+    polarity = blob.sentiment.polarity
+    subjectivity = blob.sentiment.subjectivity
+    return polarity, subjectivity
+
+def sentiment_visualization(score):
+    # Create a simple visualization based on the score
+    if score > 0.5:
+        return 'positive'
+    elif score > 0:
+        return 'slightly_positive'
+    elif score < -0.5:
+        return 'negative'
+    elif score < 0:
+        return 'slightly_negative'
+    return 'neutral'
 
 @app.route('/')
 def upload_file():
@@ -72,12 +85,15 @@ def upload_and_count():
         ])
         highlighted_word_percentage = (highlighted_word_count / full_word_count * 100) if full_word_count else 0
         
+        sentiment_visual = sentiment_visualization(polarity)
+        
         return jsonify(status='success', 
                        full_word_count=full_word_count, 
                        highlighted_word_count=highlighted_word_count,
                        highlighted_word_percentage=highlighted_word_percentage,
                        polarity=polarity,
                        subjectivity=subjectivity,
+                       sentiment_visual=sentiment_visual,
                        color_percentage_details=color_percentage_details)
     
     return jsonify(status='error', message="Invalid file type. Please upload a .docx file.")
