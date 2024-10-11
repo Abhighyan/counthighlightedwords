@@ -116,6 +116,20 @@
             margin: 10px 0;
             color: #666;
         }
+        .number-line {
+            position: relative;
+            height: 10px;
+            background-color: #ccc;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+        .marker {
+            position: absolute;
+            top: -5px;
+            width: 2px;
+            height: 20px;
+            background-color: #0056b3;
+        }
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
@@ -141,9 +155,14 @@
         <div id="result-container"></div>
         
         <div id="sentiment-info" class="sentiment-info">
-            <h3>Understanding Sentiment Analysis</h3>
-            <p><strong>Polarity:</strong> Measures the overall emotion of the text, ranging from -1 (very negative) to 1 (very positive).</p>
-            <p><strong>Subjectivity:</strong> Indicates how subjective or opinionated the text is, ranging from 0 (very objective) to 1 (very subjective).</p>
+            <h3>Sentiment Analysis Results</h3>
+            <p><strong>Polarity:</strong> <span id="polarity-value">0.00</span></p>
+            <p><strong>Subjectivity:</strong> <span id="subjectivity-value">0.00</span></p>
+            <div class="number-line">
+                <div id="polarity-marker" class="marker" style="left: 50%;"></div>
+                <div id="subjectivity-marker" class="marker" style="left: 50%;"></div>
+            </div>
+            <p>Polarity ranges from -1 (very negative) to 1 (very positive). Subjectivity ranges from 0 (very objective) to 1 (very subjective).</p>
         </div>
     </div>
 
@@ -155,6 +174,10 @@
         const progressBar = document.getElementById('progress-bar');
         const resultContainer = document.getElementById('result-container');
         const sentimentInfo = document.getElementById('sentiment-info');
+        const polarityValue = document.getElementById('polarity-value');
+        const subjectivityValue = document.getElementById('subjectivity-value');
+        const polarityMarker = document.getElementById('polarity-marker');
+        const subjectivityMarker = document.getElementById('subjectivity-marker');
 
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
             dropArea.addEventListener(eventName, preventDefaults, false);
@@ -233,44 +256,39 @@
                 }
             })
             .catch(error => {
-                progressContainer.style.display = 'none';
-                showMessage('An error occurred during the upload.', 'error');
+                console.error('Error:', error);
+                showMessage('An error occurred while uploading the file.', 'error');
             });
         }
 
         function showResults(data) {
+            const { full_word_count, highlighted_word_count, highlighted_word_percentage, polarity, subjectivity, color_percentage_details } = data;
+
             resultContainer.innerHTML = `
-                <div class="success-message">
-                    <h3>Analysis Results</h3>
-                    <p>Total words: ${data.full_word_count}</p>
-                    <p>Highlighted words: ${data.highlighted_word_count} (${data.highlighted_word_percentage.toFixed(2)}%)</p>
-                    <p>Sentiment Polarity: ${data.polarity.toFixed(2)} (${getSentimentDescription(data.polarity)})</p>
-                    <p>Subjectivity: ${data.subjectivity.toFixed(2)} (${getSubjectivityDescription(data.subjectivity)})</p>
-                    <h4>Highlight Colors:</h4>
-                    ${data.color_percentage_details}
-                </div>
+                <div class="success-message">Analysis completed successfully!</div>
+                <p>Full word count: ${full_word_count}</p>
+                <p>Highlighted word count: ${highlighted_word_count} (${highlighted_word_percentage.toFixed(2)}% of total)</p>
+                <div>${color_percentage_details}</div>
             `;
-            sentimentInfo.style.display = 'block';
+
+            displaySentiment({ polarity, subjectivity });
         }
 
         function showMessage(message, type) {
-            resultContainer.innerHTML = `<div class="${type}-message">${message}</div>`;
+            const messageClass = type === 'error' ? 'error-message' : 'success-message';
+            resultContainer.innerHTML = `<div class="${messageClass}">${message}</div>`;
             sentimentInfo.style.display = 'none';
         }
 
-        function getSentimentDescription(polarity) {
-            if (polarity > 0.5) return "Very Positive";
-            if (polarity > 0) return "Slightly Positive";
-            if (polarity < -0.5) return "Very Negative";
-            if (polarity < 0) return "Slightly Negative";
-            return "Neutral";
-        }
+        function displaySentiment(sentiment) {
+            const polarity = sentiment.polarity || 0; // Default to 0 if undefined
+            const subjectivity = sentiment.subjectivity || 0; // Default to 0 if undefined
 
-        function getSubjectivityDescription(subjectivity) {
-            if (subjectivity > 0.75) return "Very Subjective";
-            if (subjectivity > 0.5) return "Somewhat Subjective";
-            if (subjectivity > 0.25) return "Somewhat Objective";
-            return "Very Objective";
+            polarityValue.textContent = polarity.toFixed(2);
+            subjectivityValue.textContent = subjectivity.toFixed(2);
+            polarityMarker.style.left = `${(polarity + 1) * 50}%`;
+            subjectivityMarker.style.left = `${subjectivity * 100}%`;
+            sentimentInfo.style.display = 'block';
         }
     </script>
 </body>
