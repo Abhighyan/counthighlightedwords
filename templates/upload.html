@@ -3,130 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Upload</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-</head>
-<body>
-    <div class="container">
-        <h1>Upload Your .docx File</h1>
-        
-        <!-- Drag-and-drop area -->
-        <div class="drop-area" id="drop-area">
-            <p id="drop-text">Drag & Drop your .docx file here</p>
-        </div>
-        
-   
-        <input type="file" id="fileInput" class="file-input" accept=".docx"/>
-        <label for="fileInput" class="select-button">Select a file from your device</label>
-        
-        <!-- Progress bar -->
-        <div id="progress-wrapper" style="display: none;">
-            <div id="progress-bar"></div>
-        </div>
-        
-        <!-- Submit button to upload file -->
-        <button class="submit-button" id="submit-button">Upload</button>
-
-        <!-- Message container -->
-        <div id="message"></div>
-    </div>
-
+    <title>Document Upload</title>
     <script>
-        const dropArea = document.getElementById('drop-area');
-        const fileInput = document.getElementById('fileInput');
-        const submitButton = document.getElementById('submit-button');
-        const message = document.getElementById('message');
-        const progressBar = document.getElementById('progress-bar');
-        const progressWrapper = document.getElementById('progress-wrapper');
-        let selectedFile;
-
-        // Drag and drop functionality
-        dropArea.addEventListener('dragover', (event) => {
+        function handleFileUpload(event) {
             event.preventDefault();
-            dropArea.classList.add('active');
-        });
+            const fileInput = document.getElementById('file-input');
+            const file = fileInput.files[0];
 
-        dropArea.addEventListener('dragleave', () => {
-            dropArea.classList.remove('active');
-        });
-
-        dropArea.addEventListener('drop', (event) => {
-            event.preventDefault();
-            dropArea.classList.remove('active');
-            selectedFile = event.dataTransfer.files[0];
-            fileInput.files = event.dataTransfer.files;  // Attach file to file input for form submission
-            updateDropAreaText();
-        });
-
-        // Listen to the file input for file selection
-        fileInput.addEventListener('change', (event) => {
-            selectedFile = event.target.files[0];
-            updateDropAreaText();
-        });
-
-        // Update the drop area text and style
-        function updateDropAreaText() {
-            const dropText = document.getElementById('drop-text');
-            if (selectedFile) {
-                dropText.textContent = `File selected: ${selectedFile.name}`;
-                dropArea.style.backgroundColor = '#d4edda'; // Light green background
-            } else {
-                dropText.textContent = 'Drag & Drop your .docx file here';
-                dropArea.style.backgroundColor = '#f9f9f9';
-            }
-        }
-
-        // Handle file upload on submit button click
-        submitButton.addEventListener('click', () => {
-            if (!selectedFile) {
-                alert('Please select a file.');
+            if (!file) {
+                alert("Please select a file.");
                 return;
             }
 
             const formData = new FormData();
-            formData.append('file', selectedFile);
+            formData.append('file', file);
 
-            // Show the progress bar
-            progressWrapper.style.display = 'block';
-
-            // Use XMLHttpRequest for progress tracking
             const xhr = new XMLHttpRequest();
             xhr.open('POST', '/upload', true);
 
-            // Update progress bar
-            xhr.upload.addEventListener('progress', (event) => {
-                if (event.lengthComputable) {
-                    const percentComplete = (event.loaded / event.total) * 100;
-                    progressBar.style.width = percentComplete + '%';
-                }
-            });
+            xhr.onloadstart = function() {
+                document.getElementById('progress-bar').style.display = 'block';
+                document.getElementById('progress-bar').style.width = '0%';
+                document.getElementById('upload-result').innerHTML = '';
+            };
 
-            // Handle successful upload
-            xhr.onload = function () {
+            xhr.upload.onprogress = function(e) {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    document.getElementById('progress-bar').style.width = percentComplete + '%';
+                }
+            };
+
+            xhr.onload = function() {
                 if (xhr.status === 200) {
                     const response = JSON.parse(xhr.responseText);
                     if (response.status === 'success') {
-                        message.innerHTML = `<p style="color: green;">${response.message}</p>`;
+                        document.getElementById('upload-result').innerHTML = `
+                            <div class="success-message">
+                                <h3>Upload Successful!</h3>
+                                <p>Full word count: ${response.full_word_count}</p>
+                                <p>Number of highlighted words: ${response.highlighted_word_count} (${response.highlighted_word_percentage.toFixed(2)}% of total)</p>
+                                <p>${response.color_percentage_details}</p>
+                            </div>
+                        `;
+                        document.getElementById('upload-area').style.backgroundColor = '#e9f9e4'; // Light green background
                     } else {
-                        message.innerHTML = `<p style="color: red;">${response.message}</p>`;
+                        document.getElementById('upload-result').innerHTML = `<div class="error-message">${response.message}</div>`;
                     }
-                    progressBar.style.width = '0%'; // Reset progress bar
-                    progressWrapper.style.display = 'none'; // Hide progress bar
                 } else {
-                    message.innerHTML = `<p style="color: red;">An error occurred during the upload.</p>`;
+                    document.getElementById('upload-result').innerHTML = '<div class="error-message">An error occurred during the upload.</div>';
                 }
+                document.getElementById('progress-bar').style.display = 'none';
             };
 
-            // Handle errors
-            xhr.onerror = function () {
-                message.innerHTML = `<p style="color: red;">An error occurred during the upload.</p>`;
-                progressBar.style.width = '0%'; // Reset progress bar
-                progressWrapper.style.display = 'none'; // Hide progress bar
-            };
-
-            // Send the request
             xhr.send(formData);
-        });
+        }
     </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Upload a .docx File</h1>
+        <div id="upload-area" class="drop-area" onclick="document.getElementById('file-input').click();">
+            <input type="file" id="file-input" name="file" accept=".docx" style="display: none;" onchange="handleFileUpload(event)">
+            <p>Drag and drop your file here or <span class="file-upload-text">select from device</span></p>
+        </div>
+        <div id="progress-bar" class="progress-bar" style="display: none;"></div>
+        <button class="submit-button" onclick="document.getElementById('file-input').click();">Upload</button>
+        <div id="upload-result"></div>
+    </div>
 </body>
 </html>
