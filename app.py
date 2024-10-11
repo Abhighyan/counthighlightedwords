@@ -4,10 +4,10 @@ from textblob import TextBlob
 import os
 from werkzeug.utils import secure_filename
 
+
 app = Flask(__name__)
 
 ALLOWED_EXTENSIONS = {'docx'}
-MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -65,8 +65,10 @@ def upload_and_count():
         
         os.remove(file_path)
         
-        color_percentage_details = "<br>".join([f"Highlighted in {color}: {count} words ({(count / full_word_count * 100):.2f}% of total)"
-                                                  for color, count in color_counts.items()])
+        color_percentage_details = "<br>".join([
+            f"Highlighted in {color}: {count} words ({(count / full_word_count * 100):.2f}% of total)"
+            for color, count in color_counts.items()
+        ])
         highlighted_word_percentage = (highlighted_word_count / full_word_count * 100) if full_word_count else 0
         
         return jsonify(status='success', 
