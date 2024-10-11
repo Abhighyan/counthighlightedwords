@@ -98,24 +98,6 @@
             border-left: 4px solid #ef5350;
             animation: fadeIn 0.5s ease-out;
         }
-        .sentiment-info {
-            margin-top: 20px;
-            background-color: #f9f9f9;
-            padding: 15px;
-            border-radius: 4px;
-            display: none;
-            animation: fadeIn 0.5s ease-out;
-        }
-        .sentiment-info h3 {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-            margin-top: 0;
-        }
-        .sentiment-info p {
-            margin: 10px 0;
-            color: #666;
-        }
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
@@ -139,12 +121,8 @@
         </div>
         
         <div id="result-container"></div>
-        
-        <div id="sentiment-info" class="sentiment-info">
-            <h3>Understanding Sentiment Analysis</h3>
-            <p><strong>Polarity:</strong> Measures the overall emotion of the text, ranging from -1 (very negative) to 1 (very positive).</p>
-            <p><strong>Subjectivity:</strong> Indicates how subjective or opinionated the text is, ranging from 0 (very objective) to 1 (very subjective).</p>
-        </div>
+
+        <!-- Removed the sentiment-info section to eliminate graphical representation -->
     </div>
 
     <script>
@@ -154,7 +132,6 @@
         const progressContainer = document.getElementById('progress-container');
         const progressBar = document.getElementById('progress-bar');
         const resultContainer = document.getElementById('result-container');
-        const sentimentInfo = document.getElementById('sentiment-info');
 
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
             dropArea.addEventListener(eventName, preventDefaults, false);
@@ -250,15 +227,17 @@
                     ${data.color_percentage_details}
                 </div>
             `;
-            sentimentInfo.style.display = 'block';
         }
 
         function showMessage(message, type) {
-            resultContainer.innerHTML = `<div class="${type}-message">${message}</div>`;
-            sentimentInfo.style.display = 'none';
+            const messageContainer = document.createElement('div');
+            messageContainer.className = type === 'error' ? 'error-message' : 'success-message';
+            messageContainer.textContent = message;
+            document.querySelector('.container').insertBefore(messageContainer, dropArea);
+            setTimeout(() => {
+                messageContainer.remove();
+            }, 5000);
         }
-
-        
     </script>
 </body>
 </html>
