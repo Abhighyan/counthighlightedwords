@@ -4,10 +4,10 @@ from textblob import TextBlob
 import os
 from werkzeug.utils import secure_filename
 
-
 app = Flask(__name__)
 
 ALLOWED_EXTENSIONS = {'docx'}
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
