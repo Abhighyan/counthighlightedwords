@@ -116,22 +116,6 @@
             margin: 10px 0;
             color: #666;
         }
-        .sentiment-bar {
-            width: 100%;
-            height: 10px;
-            border-radius: 5px;
-            margin: 5px 0;
-            background-color: #e0e0e0;
-        }
-        .polarity-positive {
-            background-color: #4caf50; /* Green */
-        }
-        .polarity-negative {
-            background-color: #f44336; /* Red */
-        }
-        .polarity-neutral {
-            background-color: #2196F3; /* Blue */
-        }
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
@@ -159,4 +143,135 @@
         <div id="sentiment-info" class="sentiment-info">
             <h3>Understanding Sentiment Analysis</h3>
             <p><strong>Polarity:</strong> Measures the overall emotion of the text, ranging from -1 (very negative) to 1 (very positive).</p>
-            <p><strong>Subjectivity:</strong> Indicates how subjective or opinion
+            <p><strong>Subjectivity:</strong> Indicates how subjective or opinionated the text is, ranging from 0 (very objective) to 1 (very subjective).</p>
+        </div>
+    </div>
+
+    <script>
+        const dropArea = document.getElementById('drop-area');
+        const fileInput = document.getElementById('file-input');
+        const analyzeButton = document.getElementById('analyze-button');
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+        const resultContainer = document.getElementById('result-container');
+        const sentimentInfo = document.getElementById('sentiment-info');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight() {
+            dropArea.classList.add('dragover');
+        }
+
+        function unhighlight() {
+            dropArea.classList.remove('dragover');
+        }
+
+        dropArea.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+
+        fileInput.addEventListener('change', function() {
+            handleFiles(this.files);
+        });
+
+        dropArea.addEventListener('click', () => fileInput.click());
+
+        function handleFiles(files) {
+            if (files.length > 0 && files[0].name.endsWith('.docx')) {
+                analyzeButton.disabled = false;
+                analyzeButton.textContent = `Analyze ${files[0].name}`;
+            } else {
+                showMessage('Please select a valid .docx file.', 'error');
+            }
+        }
+
+        analyzeButton.addEventListener('click', uploadAndAnalyze);
+
+        function uploadAndAnalyze() {
+            const file = fileInput.files[0];
+            if (!file) {
+                showMessage('Please select a file first.', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            progressContainer.style.display = 'block';
+            progressBar.style.width = '0%';
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                progressContainer.style.display = 'none';
+                if (data.status === 'success') {
+                    showResults(data);
+                } else {
+                    showMessage(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                progressContainer.style.display = 'none';
+                showMessage('An error occurred during the upload.', 'error');
+            });
+        }
+
+        function showResults(data) {
+            resultContainer.innerHTML = `
+                <div class="success-message">
+                    <h3>Analysis Results</h3>
+                    <p>Total words: ${data.full_word_count}</p>
+                    <p>Highlighted words: ${data.highlighted_word_count} (${data.highlighted_word_percentage.toFixed(2)}%)</p>
+                    <p>Sentiment Polarity: ${data.polarity.toFixed(2)} (${getSentimentDescription(data.polarity)})</p>
+                    <p>Subjectivity: ${data.subjectivity.toFixed(2)} (${getSubjectivityDescription(data.subjectivity)})</p>
+                    <h4>Highlight Colors:</h4>
+                    ${data.color_percentage_details}
+                </div>
+            `;
+            sentimentInfo.style.display = 'block';
+        }
+
+        function showMessage(message, type) {
+            resultContainer.innerHTML = `<div class="${type}-message">${message}</div>`;
+            sentimentInfo.style.display = 'none';
+        }
+
+        function getSentimentDescription(polarity) {
+            if (polarity > 0.5) return "Very Positive";
+            if (polarity > 0) return "Slightly Positive";
+            if (polarity < -0.5) return "Very Negative";
+            if (polarity < 0) return "Slightly Negative";
+            return "Neutral";
+        }
+
+        function getSubjectivityDescription(subjectivity) {
+            if (subjectivity > 0.75) return "Very Subjective";
+            if (subjectivity > 0.5) return "Somewhat Subjective";
+            if (subjectivity > 0.25) return "Somewhat Objective";
+            return "Very Objective";
+        }
+    </script>
+</body>
+</html>
