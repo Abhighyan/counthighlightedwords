@@ -1,312 +1,164 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"> 
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document Analyzer</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <title>Document Upload</title>
     <style>
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f7f7f7;
-            color: #333;
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
             margin: 0;
             padding: 20px;
-            line-height: 1.6;
-        }
-        .container {
-            max-width: 600px;
-            margin: auto;
-            padding: 30px;
-            background: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         h1 {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 20px;
             text-align: center;
-            color: #333;
         }
-        .description {
-            text-align: center;
-            color: #666;
-            margin-bottom: 20px;
-        }
-        .drop-area {
-            border: 2px dashed #ccc;
+        .upload-container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ccc;
             border-radius: 8px;
-            padding: 30px;
-            text-align: center;
-            transition: all 0.3s ease;
+            background-color: #fff;
+        }
+        input[type="file"] {
+            display: block;
+            margin: 20px auto;
+        }
+        button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 16px;
             cursor: pointer;
-            margin-bottom: 20px;
-            background-color: #fafafa;
-        }
-        .drop-area:hover, .drop-area.dragover {
-            background-color: #f0f0f0;
-            border-color: #999;
-        }
-        .file-upload-text {
-            color: #0056b3;
-            text-decoration: underline;
-        }
-        .submit-button {
-            background-color: #f0f0f0;
-            color: #333;
             border: none;
-            border-radius: 4px;
-            padding: 10px 16px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            width: 100%;
-            margin-bottom: 10px;
+            background-color: #28a745;
+            color: white;
+            border-radius: 5px;
         }
-        .submit-button:hover {
-            background-color: #e0e0e0;
-        }
-        #progress-container {
+        #result {
             margin-top: 20px;
-            background-color: #f0f0f0;
-            border-radius: 4px;
-            overflow: hidden;
             display: none;
-        }
-        .progress-bar {
-            width: 0;
-            height: 4px;
-            background-color: #0056b3;
-            transition: width 0.4s ease-in-out;
-        }
-        .success-message {
-            background-color: #e8f5e9;
-            padding: 15px;
-            border-radius: 4px;
-            margin-top: 20px;
-            border-left: 4px solid #4caf50;
-            animation: fadeIn 0.5s ease-out;
         }
         .error-message {
-            background-color: #ffebee;
-            color: #c62828;
-            padding: 15px;
-            border-radius: 4px;
-            margin-top: 20px;
-            border-left: 4px solid #ef5350;
-            animation: fadeIn 0.5s ease-out;
+            color: red;
         }
-        .sentiment-info {
-            margin-top: 20px;
-            background-color: #f9f9f9;
-            padding: 15px;
-            border-radius: 4px;
-            display: none;
-            animation: fadeIn 0.5s ease-out;
-        }
-        .sentiment-info h3 {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-            margin-top: 0;
-        }
-        .sentiment-info p {
-            margin: 10px 0;
-            color: #666;
-        }
-        .read-more {
-            color: #0056b3;
-            cursor: pointer;
-            text-decoration: underline;
+        .success-message {
+            color: green;
         }
         .popup {
             display: none;
             position: fixed;
-            left: 0;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            border: 1px solid #ccc;
+            padding: 20px;
+            z-index: 1000;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .popup-overlay {
+            position: fixed;
             top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-        .popup-content {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            max-width: 500px;
-            text-align: left;
-        }
-        .close-popup {
-            cursor: pointer;
-            color: #c62828;
-            float: right;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 500;
+            display: none;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Document Analyzer</h1>
-        <p class="description">Upload a .docx file to analyze its content, including word count, highlighted text, and sentiment.</p>
-        
-        <div id="drop-area" class="drop-area">
-            <input type="file" id="file-input" name="file" accept=".docx" style="display: none;">
-            <p>Drag and drop your .docx file here or <span class="file-upload-text">select from device</span></p>
-        </div>
-        
-        <button id="analyze-button" class="submit-button" disabled>Analyze Document</button>
-        
-        <div id="progress-container">
-            <div id="progress-bar" class="progress-bar"></div>
-        </div>
-        
-        <div id="result-container"></div>
-        
-        <div id="sentiment-info" class="sentiment-info">
-            <h3>Understanding Sentiment Analysis</h3>
-            <p><strong>Polarity:</strong> Measures the overall emotion of the text, ranging from -1 (very negative) to 1 (very positive). <span class="read-more" onclick="showPolarityPopup()">Read more</span></p>
-            <p><strong>Subjectivity:</strong> Indicates how subjective or opinionated the text is, ranging from 0 (very objective) to 1 (very subjective). <span class="read-more" onclick="showSubjectivityPopup()">Read more</span></p>
-        </div>
+    <div class="upload-container">
+        <h1>Upload a .docx File</h1>
+        <input type="file" id="fileInput" accept=".docx">
+        <button id="uploadButton">Upload</button>
+        <div id="result"></div>
     </div>
 
-    <!-- Popup for Polarity -->
-    <div id="polarity-popup" class="popup">
-        <div class="popup-content">
-            <span class="close-popup" onclick="closePolarityPopup()">✖</span>
-            <h3>Polarity</h3>
-            <p>Polarity in TextBlob quantifies the sentiment expressed in the text. It ranges from -1 to 1, where -1 indicates a very negative sentiment, 0 indicates a neutral sentiment, and 1 indicates a very positive sentiment. This allows you to gauge the overall emotional tone of the text, helping to understand whether it conveys positive, negative, or neutral feelings.</p>
-        </div>
-    </div>
-
-    <!-- Popup for Subjectivity -->
-    <div id="subjectivity-popup" class="popup">
-        <div class="popup-content">
-            <span class="close-popup" onclick="closeSubjectivityPopup()">✖</span>
-            <h3>Subjectivity</h3>
-            <p>Subjectivity in TextBlob refers to the degree to which the text is opinionated. It ranges from 0 to 1, where 0 indicates a very objective statement (fact-based) and 1 indicates a very subjective statement (opinion-based). This helps to understand whether the content is expressing opinions or presenting factual information.</p>
-        </div>
+    <div class="popup-overlay" id="popupOverlay"></div>
+    <div class="popup" id="popup">
+        <h2>Polarity and Subjectivity</h2>
+        <p>
+            <strong>Polarity:</strong> Polarity is a measure of how positive or negative a given piece of text is. The values range from -1.0 to 1.0, where -1.0 indicates a very negative sentiment, 0.0 indicates a neutral sentiment, and 1.0 indicates a very positive sentiment.
+        </p>
+        <p>
+            <strong>Subjectivity:</strong> Subjectivity indicates whether a text is more opinion-based or factual. The values range from 0.0 to 1.0, where 0.0 indicates a very objective text (factual), and 1.0 indicates a very subjective text (opinion-based).
+        </p>
+        <button id="closePopup">Close</button>
     </div>
 
     <script>
-        const dropArea = document.getElementById('drop-area');
-        const fileInput = document.getElementById('file-input');
-        const analyzeButton = document.getElementById('analyze-button');
-        const progressContainer = document.getElementById('progress-container');
-        const progressBar = document.getElementById('progress-bar');
-        const resultContainer = document.getElementById('result-container');
-        const sentimentInfo = document.getElementById('sentiment-info');
+        const uploadButton = document.getElementById('uploadButton');
+        const fileInput = document.getElementById('fileInput');
+        const resultContainer = document.getElementById('result');
+        const popup = document.getElementById('popup');
+        const popupOverlay = document.getElementById('popupOverlay');
+        const closePopup = document.getElementById('closePopup');
 
-        // Popups for polarity and subjectivity
-        const polarityPopup = document.getElementById('polarity-popup');
-        const subjectivityPopup = document.getElementById('subjectivity-popup');
-
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, preventDefaults, false);
-        });
-
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropArea.addEventListener(eventName, highlight, false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, unhighlight, false);
-        });
-
-        function highlight() {
-            dropArea.classList.add('dragover');
-        }
-
-        function unhighlight() {
-            dropArea.classList.remove('dragover');
-        }
-
-        dropArea.addEventListener('drop', handleDrop, false);
-        fileInput.addEventListener('change', handleFiles, false);
-        analyzeButton.addEventListener('click', analyzeDocument);
-
-        function handleDrop(e) {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            handleFiles({ files });
-        }
-
-        function handleFiles({ files }) {
-            if (files.length) {
-                fileInput.files = files;
-                analyzeButton.disabled = false;
-            }
-        }
-
-        function analyzeDocument() {
+        uploadButton.addEventListener('click', () => {
             const file = fileInput.files[0];
+            if (!file) {
+                showMessage("Please select a file.", 'error');
+                return;
+            }
+
             const formData = new FormData();
             formData.append('file', file);
 
             const xhr = new XMLHttpRequest();
-            xhr.open('POST', '/analyze', true);
-
-            xhr.upload.onprogress = function(e) {
-                if (e.lengthComputable) {
-                    const percentComplete = (e.loaded / e.total) * 100;
-                    progressContainer.style.display = 'block';
-                    progressBar.style.width = percentComplete + '%';
-                }
-            };
+            xhr.open('POST', '/upload', true);
 
             xhr.onload = function() {
                 if (xhr.status === 200) {
-                    progressContainer.style.display = 'none';
                     const response = JSON.parse(xhr.responseText);
-                    showResults(response);
+                    if (response.status === 'success') {
+                        const { full_word_count, highlighted_word_count, highlighted_word_percentage, polarity, subjectivity, color_percentage_details } = response;
+                        resultContainer.innerHTML = `
+                            <div class="success-message">Analysis Results:</div>
+                            <p>Total Words: ${full_word_count}</p>
+                            <p>Highlighted Words: ${highlighted_word_count} (${highlighted_word_percentage.toFixed(2)}%)</p>
+                            <p>Polarity: ${polarity}</p>
+                            <p>Subjectivity: ${subjectivity}</p>
+                            <div>${color_percentage_details}</div>
+                        `;
+                        resultContainer.style.display = 'block';
+                    } else {
+                        showMessage(response.message, 'error');
+                    }
                 } else {
-                    showMessage('Error analyzing document. Please try again.', 'error');
+                    showMessage("An error occurred while processing the file.", 'error');
                 }
             };
 
             xhr.send(formData);
-        }
-
-        function showResults(response) {
-            // Implement your logic to show results here
-            // Example:
-            resultContainer.innerHTML = `<div class="success-message">Analysis complete!</div>`;
-            sentimentInfo.style.display = 'block'; // Show sentiment info
-        }
+        });
 
         function showMessage(message, type) {
             resultContainer.innerHTML = `<div class="${type}-message">${message}</div>`;
-            sentimentInfo.style.display = 'none';
+            resultContainer.style.display = 'block';
         }
 
-        // Popup functions
-        function showPolarityPopup() {
-            polarityPopup.style.display = 'flex';
-        }
+        // Popup functionality
+        document.addEventListener('click', (e) => {
+            if (e.target.matches('.popup-overlay')) {
+                closePopup.click();
+            }
+        });
 
-        function closePolarityPopup() {
-            polarityPopup.style.display = 'none';
-        }
+        closePopup.addEventListener('click', () => {
+            popup.style.display = 'none';
+            popupOverlay.style.display = 'none';
+        });
 
-        function showSubjectivityPopup() {
-            subjectivityPopup.style.display = 'flex';
-        }
-
-        function closeSubjectivityPopup() {
-            subjectivityPopup.style.display = 'none';
-        }
-
+        // Show popup for polarity and subjectivity
+        resultContainer.addEventListener('click', () => {
+            popup.style.display = 'block';
+            popupOverlay.style.display = 'block';
+        });
     </script>
 </body>
 </html>
