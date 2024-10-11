@@ -3,282 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document Analyzer</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <title>Document Analysis</title>
+    <link rel="stylesheet" href="styles.css">
     <style>
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f7f7f7;
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
             color: #333;
-            margin: 0;
             padding: 20px;
-            line-height: 1.6;
+            margin: 0;
         }
         .container {
             max-width: 600px;
             margin: auto;
-            padding: 30px;
-            background: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-        h1 {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            text-align: center;
-            color: #333;
-        }
-        .description {
-            text-align: center;
-            color: #666;
-            margin-bottom: 20px;
-        }
-        .drop-area {
-            border: 2px dashed #ccc;
-            border-radius: 8px;
-            padding: 30px;
-            text-align: center;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            margin-bottom: 20px;
-            background-color: #fafafa;
-        }
-        .drop-area:hover, .drop-area.dragover {
-            background-color: #f0f0f0;
-            border-color: #999;
-        }
-        .file-upload-text {
-            color: #0056b3;
-            text-decoration: underline;
-        }
-        .submit-button {
-            background-color: #f0f0f0;
-            color: #333;
-            border: none;
-            border-radius: 4px;
-            padding: 10px 16px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            width: 100%;
-            margin-bottom: 10px;
-        }
-        .submit-button:hover {
-            background-color: #e0e0e0;
-        }
-        #progress-container {
-            margin-top: 20px;
-            background-color: #f0f0f0;
-            border-radius: 4px;
-            overflow: hidden;
-            display: none;
-        }
-        .progress-bar {
-            width: 0;
-            height: 4px;
-            background-color: #0056b3;
-            transition: width 0.4s ease-in-out;
-        }
-        .success-message {
-            background-color: #e8f5e9;
-            padding: 15px;
-            border-radius: 4px;
-            margin-top: 20px;
-            border-left: 4px solid #4caf50;
-            animation: fadeIn 0.5s ease-out;
-        }
-        .error-message {
-            background-color: #ffebee;
-            color: #c62828;
-            padding: 15px;
-            border-radius: 4px;
-            margin-top: 20px;
-            border-left: 4px solid #ef5350;
-            animation: fadeIn 0.5s ease-out;
-        }
-        .sentiment-info {
-            margin-top: 20px;
-            background-color: #f9f9f9;
-            padding: 15px;
-            border-radius: 4px;
-            display: none;
-            animation: fadeIn 0.5s ease-out;
-        }
-        .sentiment-info h3 {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
+        h3 {
             margin-top: 0;
         }
-        .sentiment-info p {
-            margin: 10px 0;
-            color: #666;
+        .success-message, .error-message {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
         }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .polarity-bar, .subjectivity-bar {
+            height: 20px;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+        .hidden {
+            display: none;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Document Analyzer</h1>
-        <p class="description">Upload a .docx file to analyze its content, including word count, highlighted text, and sentiment.</p>
-        
-        <div id="drop-area" class="drop-area">
-            <input type="file" id="file-input" name="file" accept=".docx" style="display: none;">
-            <p>Drag and drop your .docx file here or <span class="file-upload-text">select from device</span></p>
-        </div>
-        
-        <button id="analyze-button" class="submit-button" disabled>Analyze Document</button>
-        
-        <div id="progress-container">
-            <div id="progress-bar" class="progress-bar"></div>
-        </div>
-        
-        <div id="result-container"></div>
-        
-        <div id="sentiment-info" class="sentiment-info">
-            <h3>Understanding Sentiment Analysis</h3>
-            <p><strong>Polarity:</strong> Measures the overall emotion of the text, ranging from -1 (very negative) to 1 (very positive).</p>
-            <p><strong>Subjectivity:</strong> Indicates how subjective or opinionated the text is, ranging from 0 (very objective) to 1 (very subjective).</p>
-        </div>
+        <h2>Upload a Document for Analysis</h2>
+        <form id="upload-form" enctype="multipart/form-data">
+            <input type="file" name="file" accept=".docx" required>
+            <button type="submit">Upload</button>
+        </form>
+        <div id="result-container" class="hidden"></div>
     </div>
 
     <script>
-        const dropArea = document.getElementById('drop-area');
-        const fileInput = document.getElementById('file-input');
-        const analyzeButton = document.getElementById('analyze-button');
-        const progressContainer = document.getElementById('progress-container');
-        const progressBar = document.getElementById('progress-bar');
+        const uploadForm = document.getElementById('upload-form');
         const resultContainer = document.getElementById('result-container');
-        const sentimentInfo = document.getElementById('sentiment-info');
 
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, preventDefaults, false);
-        });
+        uploadForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const formData = new FormData(uploadForm);
 
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropArea.addEventListener(eventName, highlight, false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, unhighlight, false);
-        });
-
-        function highlight() {
-            dropArea.classList.add('dragover');
-        }
-
-        function unhighlight() {
-            dropArea.classList.remove('dragover');
-        }
-
-        dropArea.addEventListener('drop', handleDrop, false);
-
-        function handleDrop(e) {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            handleFiles(files);
-        }
-
-        fileInput.addEventListener('change', function() {
-            handleFiles(this.files);
-        });
-
-        dropArea.addEventListener('click', () => fileInput.click());
-
-        function handleFiles(files) {
-            if (files.length > 0 && files[0].name.endsWith('.docx')) {
-                analyzeButton.disabled = false;
-                analyzeButton.textContent = `Analyze ${files[0].name}`;
-            } else {
-                showMessage('Please select a valid .docx file.', 'error');
-            }
-        }
-
-        analyzeButton.addEventListener('click', uploadAndAnalyze);
-
-        function uploadAndAnalyze() {
-            const file = fileInput.files[0];
-            if (!file) {
-                showMessage('Please select a file first.', 'error');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('file', file);
-
-            progressContainer.style.display = 'block';
-            progressBar.style.width = '0%';
-
-            fetch('/upload', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                progressContainer.style.display = 'none';
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
                 if (data.status === 'success') {
                     showResults(data);
                 } else {
                     showMessage(data.message, 'error');
                 }
-            })
-            .catch(error => {
-                progressContainer.style.display = 'none';
-                showMessage('An error occurred during the upload.', 'error');
-            });
+            } catch (error) {
+                showMessage('An error occurred while uploading the file.', 'error');
+            }
+        });
+
+        function showResults(data) {
+            resultContainer.innerHTML = `
+                <div class="success-message">
+                    <h3>Analysis Results</h3>
+                    <p>Total words: ${data.full_word_count}</p>
+                    <p>Highlighted words: ${data.highlighted_word_count} (${data.highlighted_word_percentage.toFixed(2)}%)</p>
+                    <div>
+                        <p>Sentiment Polarity:</p>
+                        <div class="polarity-bar" style="background-color: ${getPolarityColor(data.polarity)}; width: ${Math.abs(data.polarity) * 100}%;"></div>
+                        <span>${data.polarity.toFixed(2)}</span>
+                    </div>
+                    <div>
+                        <p>Subjectivity:</p>
+                        <div class="subjectivity-bar" style="background-color: ${getSubjectivityColor(data.subjectivity)}; width: ${Math.abs(data.subjectivity) * 100}%;"></div>
+                        <span>${data.subjectivity.toFixed(2)}</span>
+                    </div>
+                    <h4>Highlight Colors:</h4>
+                    ${data.color_percentage_details}
+                </div>
+            `;
+            resultContainer.classList.remove('hidden');
         }
 
-function showResults(data) {
-    resultContainer.innerHTML = `
-        <div class="success-message">
-            <h3>Analysis Results</h3>
-            <p>Total words: ${data.full_word_count}</p>
-            <p>Highlighted words: ${data.highlighted_word_count} (${data.highlighted_word_percentage.toFixed(2)}%)</p>
-            <div>
-                <p>Sentiment Polarity:</p>
-                <div class="sentiment-bar ${getPolarityClass(data.polarity)}" style="width: ${Math.abs(data.polarity) * 100}%;"></div>
-            </div>
-            <div>
-                <p>Subjectivity:</p>
-                <div class="sentiment-bar ${getSubjectivityClass(data.subjectivity)}" style="width: ${data.subjectivity * 100}%;"></div>
-            </div>
-            <h4>Highlight Colors:</h4>
-            ${data.color_percentage_details}
-        </div>
-    `;
-    sentimentInfo.style.display = 'block';
-}
+        function showMessage(message, type) {
+            resultContainer.innerHTML = `<div class="${type}-message">${message}</div>`;
+            resultContainer.classList.remove('hidden');
+        }
 
-function getPolarityClass(polarity) {
-    if (polarity > 0.5) return "polarity-positive";
-    if (polarity > 0) return "polarity-positive";
-    if (polarity < -0.5) return "polarity-negative";
-    if (polarity < 0) return "polarity-negative";
-    return "polarity-neutral";
-}
+        function getPolarityColor(polarity) {
+            if (polarity > 0) return "lightgreen"; // Positive
+            if (polarity < 0) return "lightcoral"; // Negative
+            return "grey"; // Neutral
+        }
 
-function getSubjectivityClass(subjectivity) {
-    if (subjectivity > 0.75) return "subjectivity-high";
-    if (subjectivity > 0.5) return "subjectivity-medium";
-    if (subjectivity > 0.25) return "subjectivity-low";
-    return "subjectivity-very-low";
-}
-
-function showMessage(message, type) {
-    resultContainer.innerHTML = `<div class="${type}-message">${message}</div>`;
-    sentimentInfo.style.display = 'none';
-}
-
+        function getSubjectivityColor(subjectivity) {
+            if (subjectivity > 0.5) return "lightyellow"; // More subjective
+            return "lightblue"; // More objective
+        }
     </script>
 </body>
 </html>
