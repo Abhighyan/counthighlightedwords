@@ -43,6 +43,8 @@
                             <h3>Upload Successful!</h3>
                             <p>Full word count: ${response.full_word_count}</p>
                             <p>Number of highlighted words: ${response.highlighted_word_count} (${response.highlighted_word_percentage.toFixed(2)}% of total)</p>
+                            <p>Polarity: ${response.polarity.toFixed(2)}</p>
+                            <p>Subjectivity: ${response.subjectivity.toFixed(2)}</p>
                             <p>${response.color_percentage_details}</p>
                         </div>
                     `;
