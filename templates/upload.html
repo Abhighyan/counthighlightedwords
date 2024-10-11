@@ -5,122 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document Analyzer</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f7f7f7;
-            color: #333;
-            margin: 0;
-            padding: 20px;
-            line-height: 1.6;
-        }
-        .container {
-            max-width: 600px;
-            margin: auto;
-            padding: 30px;
-            background: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        h1 {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            text-align: center;
-            color: #333;
-        }
-        .description {
-            text-align: center;
-            color: #666;
-            margin-bottom: 20px;
-        }
-        .drop-area {
-            border: 2px dashed #ccc;
-            border-radius: 8px;
-            padding: 30px;
-            text-align: center;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            margin-bottom: 20px;
-            background-color: #fafafa;
-        }
-        .drop-area:hover, .drop-area.dragover {
-            background-color: #f0f0f0;
-            border-color: #999;
-        }
-        .file-upload-text {
-            color: #0056b3;
-            text-decoration: underline;
-        }
-        .submit-button {
-            background-color: #f0f0f0;
-            color: #333;
-            border: none;
-            border-radius: 4px;
-            padding: 10px 16px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            width: 100%;
-            margin-bottom: 10px;
-        }
-        .submit-button:hover {
-            background-color: #e0e0e0;
-        }
-        #progress-container {
-            margin-top: 20px;
-            background-color: #f0f0f0;
-            border-radius: 4px;
-            overflow: hidden;
-            display: none;
-        }
-        .progress-bar {
-            width: 0;
-            height: 4px;
-            background-color: #0056b3;
-            transition: width 0.4s ease-in-out;
-        }
-        .success-message {
-            background-color: #e8f5e9;
-            padding: 15px;
-            border-radius: 4px;
-            margin-top: 20px;
-            border-left: 4px solid #4caf50;
-            animation: fadeIn 0.5s ease-out;
-        }
-        .error-message {
-            background-color: #ffebee;
-            color: #c62828;
-            padding: 15px;
-            border-radius: 4px;
-            margin-top: 20px;
-            border-left: 4px solid #ef5350;
-            animation: fadeIn 0.5s ease-out;
-        }
-        .sentiment-info {
-            margin-top: 20px;
-            background-color: #f9f9f9;
-            padding: 15px;
-            border-radius: 4px;
-            display: none;
-            animation: fadeIn 0.5s ease-out;
-        }
-        .sentiment-info h3 {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-            margin-top: 0;
-        }
-        .sentiment-info p {
-            margin: 10px 0;
-            color: #666;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-    </style>
+    <link rel="stylesheet" href="static/style.css">
 </head>
 <body>
     <div class="container">
@@ -239,39 +124,11 @@
         }
 
         function showResults(data) {
+            const sentimentIcon = getSentimentIcon(data.sentiment_visual);
             resultContainer.innerHTML = `
                 <div class="success-message">
                     <h3>Analysis Results</h3>
                     <p>Total words: ${data.full_word_count}</p>
                     <p>Highlighted words: ${data.highlighted_word_count} (${data.highlighted_word_percentage.toFixed(2)}%)</p>
-                    <p>Sentiment Polarity: ${data.polarity.toFixed(2)} (${getSentimentDescription(data.polarity)})</p>
-                    <p>Subjectivity: ${data.subjectivity.toFixed(2)} (${getSubjectivityDescription(data.subjectivity)})</p>
-                    <h4>Highlight Colors:</h4>
-                    ${data.color_percentage_details}
-                </div>
-            `;
-            sentimentInfo.style.display = 'block';
-        }
-
-        function showMessage(message, type) {
-            resultContainer.innerHTML = `<div class="${type}-message">${message}</div>`;
-            sentimentInfo.style.display = 'none';
-        }
-
-        function getSentimentDescription(polarity) {
-            if (polarity > 0.5) return "Very Positive";
-            if (polarity > 0) return "Slightly Positive";
-            if (polarity < -0.5) return "Very Negative";
-            if (polarity < 0) return "Slightly Negative";
-            return "Neutral";
-        }
-
-        function getSubjectivityDescription(subjectivity) {
-            if (subjectivity > 0.75) return "Very Subjective";
-            if (subjectivity > 0.5) return "Somewhat Subjective";
-            if (subjectivity > 0.25) return "Somewhat Objective";
-            return "Very Objective";
-        }
-    </script>
-</body>
-</html>
+                    <p>Sentiment Polarity: <span class="${sentimentIcon}"></span> (${data.polarity.toFixed(2)})</p>
+                    <p>Subjectivity: <span class="${getSubjectivityIcon(data.subjectivity)}"></span> (${data.subjectivity
