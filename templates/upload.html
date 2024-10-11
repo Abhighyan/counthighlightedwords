@@ -238,40 +238,47 @@
             });
         }
 
-        function showResults(data) {
-            resultContainer.innerHTML = `
-                <div class="success-message">
-                    <h3>Analysis Results</h3>
-                    <p>Total words: ${data.full_word_count}</p>
-                    <p>Highlighted words: ${data.highlighted_word_count} (${data.highlighted_word_percentage.toFixed(2)}%)</p>
-                    <p>Sentiment Polarity: ${data.polarity.toFixed(2)} (${getSentimentDescription(data.polarity)})</p>
-                    <p>Subjectivity: ${data.subjectivity.toFixed(2)} (${getSubjectivityDescription(data.subjectivity)})</p>
-                    <h4>Highlight Colors:</h4>
-                    ${data.color_percentage_details}
-                </div>
-            `;
-            sentimentInfo.style.display = 'block';
-        }
+function showResults(data) {
+    resultContainer.innerHTML = `
+        <div class="success-message">
+            <h3>Analysis Results</h3>
+            <p>Total words: ${data.full_word_count}</p>
+            <p>Highlighted words: ${data.highlighted_word_count} (${data.highlighted_word_percentage.toFixed(2)}%)</p>
+            <div>
+                <p>Sentiment Polarity:</p>
+                <div class="sentiment-bar ${getPolarityClass(data.polarity)}" style="width: ${Math.abs(data.polarity) * 100}%;"></div>
+            </div>
+            <div>
+                <p>Subjectivity:</p>
+                <div class="sentiment-bar ${getSubjectivityClass(data.subjectivity)}" style="width: ${data.subjectivity * 100}%;"></div>
+            </div>
+            <h4>Highlight Colors:</h4>
+            ${data.color_percentage_details}
+        </div>
+    `;
+    sentimentInfo.style.display = 'block';
+}
 
-        function showMessage(message, type) {
-            resultContainer.innerHTML = `<div class="${type}-message">${message}</div>`;
-            sentimentInfo.style.display = 'none';
-        }
+function getPolarityClass(polarity) {
+    if (polarity > 0.5) return "polarity-positive";
+    if (polarity > 0) return "polarity-positive";
+    if (polarity < -0.5) return "polarity-negative";
+    if (polarity < 0) return "polarity-negative";
+    return "polarity-neutral";
+}
 
-        function getSentimentDescription(polarity) {
-            if (polarity > 0.5) return "Very Positive";
-            if (polarity > 0) return "Slightly Positive";
-            if (polarity < -0.5) return "Very Negative";
-            if (polarity < 0) return "Slightly Negative";
-            return "Neutral";
-        }
+function getSubjectivityClass(subjectivity) {
+    if (subjectivity > 0.75) return "subjectivity-high";
+    if (subjectivity > 0.5) return "subjectivity-medium";
+    if (subjectivity > 0.25) return "subjectivity-low";
+    return "subjectivity-very-low";
+}
 
-        function getSubjectivityDescription(subjectivity) {
-            if (subjectivity > 0.75) return "Very Subjective";
-            if (subjectivity > 0.5) return "Somewhat Subjective";
-            if (subjectivity > 0.25) return "Somewhat Objective";
-            return "Very Objective";
-        }
+function showMessage(message, type) {
+    resultContainer.innerHTML = `<div class="${type}-message">${message}</div>`;
+    sentimentInfo.style.display = 'none';
+}
+
     </script>
 </body>
 </html>
