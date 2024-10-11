@@ -9,12 +9,18 @@
 <body>
     <div class="container">
         <h1>Document Highlight Analysis</h1>
-        <p>Upload your .docx file for analysis. Drag and drop your file or click to select.</p>
-        <div id="drop-area" class="drop-area">
-            <p>Drop your .docx file here or <span class="file-upload-text">browse</span></p>
-            <input type="file" id="fileElem" accept=".docx" onchange="handleFiles(this.files)" hidden>
+        <p>Upload your .docx file for analysis. Drag and drop your file below or click to select a file.</p>
+
+        <!-- Drag and Drop Area -->
+        <div id="drop-area" class="drop-area" onclick="document.getElementById('fileElem').click()">
+            <p>Drop your .docx file here or <span class="file-upload-text">click to browse</span></p>
+            <input type="file" id="fileElem" accept=".docx" onchange="handleFiles(this.files)" style="display: none;">
         </div>
-        <button id="submit-button" class="submit-button">Analyze</button>
+
+        <!-- Submit Button -->
+        <button id="submit-button" class="submit-button" onclick="submitFile()">Analyze</button>
+
+        <!-- Results Section -->
         <div id="results" class="results" style="display: none;">
             <h2>Analysis Results</h2>
             <div id="highlighted-count"></div>
@@ -43,37 +49,34 @@
             handleFiles(files);
         });
 
-        dropArea.addEventListener('click', () => {
-            document.getElementById('fileElem').click();
-        });
-
         function handleFiles(files) {
             if (files.length) {
                 const file = files[0];
-                document.getElementById('highlighted-count').innerText = `File: ${file.name}`;
-                document.getElementById('results').style.display = 'block';
+                document.getElementById('highlighted-count').innerText = `File selected: ${file.name}`;
+                document.getElementById('results').style.display = 'none';
             }
         }
 
-        document.getElementById('submit-button').addEventListener('click', () => {
+        function submitFile() {
             const fileInput = document.getElementById('fileElem');
             if (fileInput.files.length > 0) {
                 const formData = new FormData();
                 formData.append('file', fileInput.files[0]);
-                
+
                 fetch('/upload', {
                     method: 'POST',
                     body: formData
                 })
                 .then(response => response.text())
                 .then(data => {
-                    document.getElementById('results').innerHTML += data;
+                    document.getElementById('results').innerHTML = data;
+                    document.getElementById('results').style.display = 'block';
                 })
                 .catch(error => console.error('Error:', error));
             } else {
                 alert("Please select a file.");
             }
-        });
+        }
     </script>
 </body>
 </html>
