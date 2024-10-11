@@ -9,10 +9,17 @@
 <body>
     <div class="container">
         <h1>Upload Your .docx File</h1>
+        
+        <!-- Drop area for drag-and-drop -->
         <div class="drop-area" id="drop-area">
             <p>Drag & Drop your .docx file here</p>
-            <input type="file" id="fileInput" class="file-input" accept=".docx" />
         </div>
+        
+        <!-- OR select file from device -->
+        <p>or</p>
+        <input type="file" id="fileInput" class="file-input" accept=".docx"/>
+        <label for="fileInput" class="select-button">Select a file from your device</label>
+        
         <button class="submit-button" id="submit-button">Upload</button>
         <div id="message"></div>
     </div>
@@ -22,6 +29,7 @@
         const fileInput = document.getElementById('fileInput');
         const submitButton = document.getElementById('submit-button');
 
+        // Drag and drop functionality
         dropArea.addEventListener('dragover', (event) => {
             event.preventDefault();
             dropArea.classList.add('active');
@@ -37,6 +45,7 @@
             fileInput.files = event.dataTransfer.files;
         });
 
+        // File upload logic
         submitButton.addEventListener('click', () => {
             const file = fileInput.files[0];
             if (file) {
