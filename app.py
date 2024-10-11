@@ -6,6 +6,10 @@ import os
 
 app = Flask(__name__, static_folder='static')
 
+# Route for homepage
+@app.route('/')
+def upload_file():
+    return render_template('upload.html')
 # Allowable extensions for document upload
 ALLOWED_EXTENSIONS = {'docx'}
 
