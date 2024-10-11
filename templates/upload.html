@@ -106,14 +106,26 @@
             display: none;
             animation: fadeIn 0.5s ease-out;
         }
+        .sentiment-info h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-top: 0;
+        }
+        .sentiment-info p {
+            margin: 10px 0;
+            color: #666;
+        }
         .number-line {
             position: relative;
-            height: 20px;
+            height: 10px;
+            background-color: #ccc;
             margin-top: 10px;
-            background-color: #e0e0e0;
+            border-radius: 5px;
         }
         .marker {
             position: absolute;
+            top: -5px;
             width: 2px;
             height: 20px;
             background-color: #0056b3;
@@ -143,15 +155,14 @@
         <div id="result-container"></div>
         
         <div id="sentiment-info" class="sentiment-info">
-            <h3>Understanding Sentiment Analysis</h3>
+            <h3>Sentiment Analysis Results</h3>
             <p><strong>Polarity:</strong> <span id="polarity-value">0.00</span></p>
-            <div class="number-line">
-                <div id="polarity-marker" class="marker"></div>
-            </div>
             <p><strong>Subjectivity:</strong> <span id="subjectivity-value">0.00</span></p>
             <div class="number-line">
-                <div id="subjectivity-marker" class="marker"></div>
+                <div id="polarity-marker" class="marker" style="left: 50%;"></div>
+                <div id="subjectivity-marker" class="marker" style="left: 50%;"></div>
             </div>
+            <p>Polarity ranges from -1 (very negative) to 1 (very positive). Subjectivity ranges from 0 (very objective) to 1 (very subjective).</p>
         </div>
     </div>
 
@@ -235,51 +246,49 @@
                 method: 'POST',
                 body: formData
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok.');
-                }
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
                 progressContainer.style.display = 'none';
                 if (data.status === 'success') {
                     showResults(data);
                 } else {
-                    showMessage(data.message || 'An error occurred during the analysis.', 'error');
+                    showMessage(data.message, 'error');
                 }
             })
             .catch(error => {
-                progressContainer.style.display = 'none';
-                showMessage('An error occurred during the upload: ' + error.message, 'error');
+                console.error('Error:', error);
+                showMessage('An error occurred while uploading the file.', 'error');
             });
         }
 
         function showResults(data) {
-            resultContainer.innerHTML = `
-                <div class="success-message">
-                    <h3>Analysis Results</h3>
-                    <p>Total words: ${data.word_count}</p>
-                    <p>Highlighted text: ${data.highlighted_text}</p>
-                </div>
-            `;
-            displaySentiment(data.sentiment);
-        }
+            const { full_word_count, highlighted_word_count, highlighted_word_percentage, polarity, subjectivity, color_percentage_details } = data;
 
-        function displaySentiment(sentiment) {
-            polarityValue.textContent = sentiment.polarity.toFixed(2);
-            subjectivityValue.textContent = sentiment.subjectivity.toFixed(2);
-            polarityMarker.style.left = `${(sentiment.polarity + 1) * 50}%`;
-            subjectivityMarker.style.left = `${(sentiment.subjectivity) * 100}%`;
-            sentimentInfo.style.display = 'block';
+            resultContainer.innerHTML = `
+                <div class="success-message">Analysis completed successfully!</div>
+                <p>Full word count: ${full_word_count}</p>
+                <p>Highlighted word count: ${highlighted_word_count} (${highlighted_word_percentage.toFixed(2)}% of total)</p>
+                <div>${color_percentage_details}</div>
+            `;
+
+            displaySentiment({ polarity, subjectivity });
         }
 
         function showMessage(message, type) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = type === 'error' ? 'error-message' : 'success-message';
-            messageDiv.textContent = message;
-            resultContainer.innerHTML = '';  // Clear previous results
-            resultContainer.appendChild(messageDiv);
+            const messageClass = type === 'error' ? 'error-message' : 'success-message';
+            resultContainer.innerHTML = `<div class="${messageClass}">${message}</div>`;
+            sentimentInfo.style.display = 'none';
+        }
+
+        function displaySentiment(sentiment) {
+            const polarity = sentiment.polarity || 0; // Default to 0 if undefined
+            const subjectivity = sentiment.subjectivity || 0; // Default to 0 if undefined
+
+            polarityValue.textContent = polarity.toFixed(2);
+            subjectivityValue.textContent = subjectivity.toFixed(2);
+            polarityMarker.style.left = `${(polarity + 1) * 50}%`;
+            subjectivityMarker.style.left = `${subjectivity * 100}%`;
+            sentimentInfo.style.display = 'block';
         }
     </script>
 </body>
