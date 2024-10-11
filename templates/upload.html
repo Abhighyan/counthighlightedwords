@@ -131,4 +131,29 @@
                     <p>Total words: ${data.full_word_count}</p>
                     <p>Highlighted words: ${data.highlighted_word_count} (${data.highlighted_word_percentage.toFixed(2)}%)</p>
                     <p>Sentiment Polarity: <span class="${sentimentIcon}"></span> (${data.polarity.toFixed(2)})</p>
-                    <p>Subjectivity: <span class="${getSubjectivityIcon(data.subjectivity)}"></span> (${data.subjectivity
+                    <p>Subjectivity: <span class="${getSubjectivityIcon(data.subjectivity)}"></span> (${data.subjectivity.toFixed(2)})</p>
+                    <div>${data.color_percentage_details}</div>
+                </div>
+            `;
+            resultContainer.style.display = 'block';
+        }
+
+        function getSentimentIcon(sentiment) {
+            return sentiment; // Returns the sentiment class name for visualization
+        }
+
+        function getSubjectivityIcon(subjectivity) {
+            return subjectivity > 0.5 ? 'subjective' : 'objective'; // Return a class name based on subjectivity
+        }
+
+        function showMessage(message, type) {
+            const messageContainer = document.createElement('div');
+            messageContainer.className = `message ${type}`;
+            messageContainer.textContent = message;
+            resultContainer.innerHTML = '';
+            resultContainer.appendChild(messageContainer);
+            resultContainer.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
