@@ -18,11 +18,7 @@ body {
 h1 {
     font-size: 24px;
     margin-bottom: 10px;
-}
-
-p {
-    font-size: 16px;
-    margin-bottom: 20px;
+    text-align: center;
 }
 
 .drop-area {
@@ -32,6 +28,7 @@ p {
     text-align: center;
     transition: background-color 0.3s;
     cursor: pointer;
+    margin-bottom: 20px;
 }
 
 .drop-area:hover {
@@ -52,21 +49,13 @@ p {
     padding: 10px 20px;
     font-size: 16px;
     cursor: pointer;
-    margin-top: 20px;
-    display: block;
-    width: 100%;
+    margin: 5px; /* Added margin for spacing */
+    width: calc(50% - 10px); /* Adjusted width for alignment */
+    display: inline-block;
 }
 
 .submit-button:hover {
     background-color: #0056b3;
-}
-
-.results {
-    margin-top: 20px;
-    padding: 20px;
-    background: #f9f9f9;
-    border-radius: 8px;
-    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
 }
 
 .progress-bar {
@@ -87,4 +76,5 @@ p {
 .error-message {
     color: red;
     margin-top: 10px;
+    text-align: center;
 }
