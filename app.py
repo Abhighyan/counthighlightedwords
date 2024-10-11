@@ -45,50 +45,36 @@ def upload_file():
 
 @app.route('/upload', methods=['POST'])
 def upload_and_count():
-    # Check if the post request has the file part
     if 'file' not in request.files:
         return "No file part"
-    
     file = request.files['file']
-    
-    # Check if the file is empty or no file is selected
     if file.filename == '':
         return "No selected file"
-    
-    # Process the file if it is allowed
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
-        filepath = os.path.join('.', filename)
-        file.save(filepath)
+        file.save(os.path.join('.', filename))
         
-        # Count highlighted words
-        highlighted_word_count, highlighted_word_color_count, full_word_count = count_highlighted_words(filepath)
+        # Perform word count and highlight analysis
+        highlighted_word_count, full_word_count, color_counts = count_highlighted_words_by_color(filename)
         
-        # Read file content for sentiment analysis
-        doc = Document(filepath)
-        text = "\n".join([para.text for para in doc.paragraphs])
-        polarity, subjectivity = perform_sentiment_analysis(text)
-        
-        os.remove(filepath)  # Clean up uploaded file after processing
-        
-        # Prepare output
-        output = (
-            f"<h1>File Analysis Results</h1>"
-            f"<h2>Sentiment Analysis:</h2>"
-            f"<p><strong>Polarity:</strong> {polarity:.2f} (Scale from -1 to 1, where -1 is negative, 1 is positive)</p>"
-            f"<p><strong>Subjectivity:</strong> {subjectivity:.2f} (Scale from 0 to 1, where 0 is very objective and 1 is very subjective)</p>"
-            f"<br>"
-            f"<h2>Highlighted Words Analysis:</h2>"
-            f"<p><strong>Total Word Count:</strong> {full_word_count}</p>"
-            f"<p><strong>Number of Highlighted Words:</strong> {highlighted_word_count} "
-            f"({(highlighted_word_count/full_word_count)*100:.2f}% of total word count)</p>"
-        )
+        os.remove(filename)  # Clean up uploaded file
 
-        # Display highlighted words by color
-        for color, count in highlighted_word_color_count.items():
-            output += f"<p><strong>Words highlighted in {color}:</strong> {count}</p>"
-        
-        return output
+        color_percentage_details = "<br>".join([
+            f"Highlighted in {color}: {count} words ({(count / full_word_count * 100):.2f}% of total)"
+            for color, count in color_counts.items()
+        ])
+
+        return f"""
+        <div class='results'>
+            <h2>Highlight Word Analysis</h2>
+            Full word count: {full_word_count}<br><br>
+            Number of highlighted words: {highlighted_word_count} 
+            ({(highlighted_word_count / full_word_count * 100):.2f}% of total word count)<br><br>
+            {color_percentage_details}
+        </div>
+        """
+    return "Invalid file type. Please upload a .docx file."
+
 
     return "Invalid file type. Please upload a .docx file."
 
