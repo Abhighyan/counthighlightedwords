@@ -3,122 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document Analysis</title>
-    <link rel="stylesheet" href="styles.css">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
-            color: #333;
-            padding: 20px;
-            margin: 0;
-        }
-        .container {
-            max-width: 600px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        h3 {
-            margin-top: 0;
-        }
-        .success-message, .error-message {
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-        }
-        .success-message {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        .error-message {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        .polarity-bar, .subjectivity-bar {
-            height: 20px;
-            border-radius: 5px;
-            margin-top: 5px;
-        }
-        .hidden {
-            display: none;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h2>Upload a Document for Analysis</h2>
-        <form id="upload-form" enctype="multipart/form-data">
-            <input type="file" name="file" accept=".docx" required>
-            <button type="submit">Upload</button>
-        </form>
-        <div id="result-container" class="hidden"></div>
-    </div>
-
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>Document Analyzer</title>
     <script>
-        const uploadForm = document.getElementById('upload-form');
-        const resultContainer = document.getElementById('result-container');
-
-        uploadForm.addEventListener('submit', async (event) => {
+        function handleFileUpload(event) {
             event.preventDefault();
-            const formData = new FormData(uploadForm);
-
-            try {
-                const response = await fetch('/upload', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await response.json();
-                if (data.status === 'success') {
-                    showResults(data);
-                } else {
-                    showMessage(data.message, 'error');
-                }
-            } catch (error) {
-                showMessage('An error occurred while uploading the file.', 'error');
+            const fileInput = document.getElementById('file-input');
+            const file = fileInput.files[0];
+            if (!file) {
+                showMessage("Please select a file.", "error");
+                return;
             }
-        });
-
-        function showResults(data) {
-            resultContainer.innerHTML = `
-                <div class="success-message">
-                    <h3>Analysis Results</h3>
-                    <p>Total words: ${data.full_word_count}</p>
-                    <p>Highlighted words: ${data.highlighted_word_count} (${data.highlighted_word_percentage.toFixed(2)}%)</p>
-                    <div>
-                        <p>Sentiment Polarity:</p>
-                        <div class="polarity-bar" style="background-color: ${getPolarityColor(data.polarity)}; width: ${Math.abs(data.polarity) * 100}%;"></div>
-                        <span>${data.polarity.toFixed(2)}</span>
-                    </div>
-                    <div>
-                        <p>Subjectivity:</p>
-                        <div class="subjectivity-bar" style="background-color: ${getSubjectivityColor(data.subjectivity)}; width: ${Math.abs(data.subjectivity) * 100}%;"></div>
-                        <span>${data.subjectivity.toFixed(2)}</span>
-                    </div>
-                    <h4>Highlight Colors:</h4>
-                    ${data.color_percentage_details}
-                </div>
-            `;
-            resultContainer.classList.remove('hidden');
+            if (file.size > 5 * 1024 * 1024) {
+                showMessage("File size exceeds the 5MB limit.", "error");
+                return;
+            }
+            const formData = new FormData();
+            formData.append('file', file);
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/upload', true);
+            xhr.onloadstart = function() {
+                document.getElementById('progress-container').style.display = 'block';
+                document.getElementById('progress-bar').style.width = '0%';
+                document.getElementById('upload-result').innerHTML = '';
+            };
+            xhr.upload.onprogress = function(e) {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    document.getElementById('progress-bar').style.width = percentComplete + '%';
+                }
+            };
+            xhr.onload = function() {
+                const response = JSON.parse(xhr.responseText);
+                if (response.status === 'success') {
+                    showResults(response);
+                } else {
+                    showMessage(response.message, "error");
+                }
+                document.getElementById('progress-container').style.display = 'none';
+            };
+            xhr.onerror = function() {
+                showMessage("An error occurred during the upload.", "error");
+                document.getElementById('progress-container').style.display = 'none';
+            };
+            xhr.send(formData);
         }
 
         function showMessage(message, type) {
-            resultContainer.innerHTML = `<div class="${type}-message">${message}</div>`;
-            resultContainer.classList.remove('hidden');
+            const resultDiv = document.getElementById('upload-result');
+            resultDiv.innerHTML = `<div class="${type}-message">${message}</div>`;
         }
 
-        function getPolarityColor(polarity) {
-            if (polarity > 0) return "lightgreen"; // Positive
-            if (polarity < 0) return "lightcoral"; // Negative
-            return "grey"; // Neutral
+        function showResults(response) {
+            const resultDiv = document.getElementById('upload-result');
+            resultDiv.innerHTML = `
+                <div class="success-message">
+                    <h3>Analysis Results</h3>
+                    <p>Total words: ${response.full_word_count}</p>
+                    <p>Highlighted words: ${response.highlighted_word_count} (${response.highlighted_word_percentage.toFixed(2)}%)</p>
+                    <p>Sentiment: ${getSentimentDescription(response.polarity)}</p>
+                    <p>Subjectivity: ${getSubjectivityDescription(response.subjectivity)}</p>
+                    <h4>Highlight Colors:</h4>
+                    ${response.color_percentage_details}
+                </div>
+            `;
         }
 
-        function getSubjectivityColor(subjectivity) {
-            if (subjectivity > 0.5) return "lightyellow"; // More subjective
-            return "lightblue"; // More objective
+        function getSentimentDescription(polarity) {
+            if (polarity > 0.5) return "Very Positive";
+            if (polarity > 0) return "Slightly Positive";
+            if (polarity < -0.5) return "Very Negative";
+            if (polarity < 0) return "Slightly Negative";
+            return "Neutral";
+        }
+
+        function getSubjectivityDescription(subjectivity) {
+            if (subjectivity > 0.75) return "Very Subjective";
+            if (subjectivity > 0.5) return "Somewhat Subjective";
+            if (subjectivity > 0.25) return "Somewhat Objective";
+            return "Very Objective";
         }
     </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Document Analyzer</h1>
+        <div id="upload-area" class="drop-area" onclick="document.getElementById('file-input').click();">
+            <input type="file" id="file-input" name="file" accept=".docx" style="display: none;" onchange="handleFileUpload(event)">
+            <p>Drag and drop your .docx file here or <span class="file-upload-text">select from device</span></p>
+        </div>
+        <div id="progress-container" style="display: none;">
+            <div id="progress-bar" class="progress-bar"></div>
+        </div>
+        <button class="submit-button" onclick="document.getElementById('file-input').click();">Select File</button>
+        <button class="submit-button" onclick="handleFileUpload(event);">Analyze</button>
+        <div id="upload-result"></div>
+    </div>
 </body>
 </html>
