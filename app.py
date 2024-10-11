@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, jsonify
 from docx import Document
 from textblob import TextBlob
 import os
@@ -46,37 +46,37 @@ def upload_file():
 @app.route('/upload', methods=['POST'])
 def upload_and_count():
     if 'file' not in request.files:
-        return "No file part"
+        return jsonify({"status": "error", "message": "No file part"})
+    
     file = request.files['file']
+    
     if file.filename == '':
-        return "No selected file"
+        return jsonify({"status": "error", "message": "No selected file"})
+    
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
         file.save(os.path.join('.', filename))
         
         # Perform word count and highlight analysis
-        highlighted_word_count, full_word_count, color_counts = count_highlighted_words_by_color(filename)
+        highlighted_word_count, color_counts, full_word_count = count_highlighted_words(filename)
         
         os.remove(filename)  # Clean up uploaded file
 
-        color_percentage_details = "<br>".join([
+        color_percentage_details = "\n".join([
             f"Highlighted in {color}: {count} words ({(count / full_word_count * 100):.2f}% of total)"
             for color, count in color_counts.items()
         ])
 
-        return f"""
-        <div class='results'>
-            <h2>Highlight Word Analysis</h2>
-            Full word count: {full_word_count}<br><br>
-            Number of highlighted words: {highlighted_word_count} 
-            ({(highlighted_word_count / full_word_count * 100):.2f}% of total word count)<br><br>
-            {color_percentage_details}
-        </div>
-        """
-    return "Invalid file type. Please upload a .docx file."
+        return jsonify({
+            "status": "success",
+            "full_word_count": full_word_count,
+            "highlighted_word_count": highlighted_word_count,
+            "highlighted_word_percentage": (highlighted_word_count / full_word_count * 100),
+            "color_percentage_details": color_percentage_details
+        })
 
+    return jsonify({"status": "error", "message": "Invalid file type. Please upload a .docx file."})
 
-    return "Invalid file type. Please upload a .docx file."
 
 if __name__ == '__main__':
     # Use the PORT environment variable provided by Railway
