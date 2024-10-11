@@ -116,17 +116,22 @@
             margin: 10px 0;
             color: #666;
         }
-        .sentiment-graphic {
-            display: flex;
-            justify-content: space-between;
-        }
         .sentiment-bar {
+            width: 100%;
             height: 10px;
             border-radius: 5px;
+            margin: 5px 0;
+            background-color: #e0e0e0;
         }
-        .positive { background-color: #4caf50; }
-        .negative { background-color: #f44336; }
-        .neutral { background-color: #9e9e9e; }
+        .polarity-positive {
+            background-color: #4caf50; /* Green */
+        }
+        .polarity-negative {
+            background-color: #f44336; /* Red */
+        }
+        .polarity-neutral {
+            background-color: #2196F3; /* Blue */
+        }
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
@@ -151,4 +156,7 @@
         
         <div id="result-container"></div>
         
-        <div id
+        <div id="sentiment-info" class="sentiment-info">
+            <h3>Understanding Sentiment Analysis</h3>
+            <p><strong>Polarity:</strong> Measures the overall emotion of the text, ranging from -1 (very negative) to 1 (very positive).</p>
+            <p><strong>Subjectivity:</strong> Indicates how subjective or opinion
