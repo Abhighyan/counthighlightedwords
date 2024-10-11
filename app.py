@@ -1,7 +1,6 @@
 from flask import Flask, request, render_template
 from docx import Document
 from werkzeug.utils import secure_filename
-from collections import defaultdict
 from textblob import TextBlob
 import os
 
@@ -13,43 +12,41 @@ ALLOWED_EXTENSIONS = {'docx'}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# Function to count words, highlighted words, and highlighted words by color
-def count_highlighted_words_by_color(docx_file):
+# Function to count highlighted words and colors
+def count_highlighted_words(docx_file):
     doc = Document(docx_file)
-    total_word_count = 0
-    highlighted_word_count = 0
-    color_highlighted_counts = defaultdict(int)  # A dictionary to track word counts by color
-
+    highlighted_words = 0
+    full_word_count = 0
+    highlight_colors = {}
     for para in doc.paragraphs:
         for run in para.runs:
-            words_in_run = run.text.split()
-            total_word_count += len(words_in_run)
+            full_word_count += len(run.text.split())
+            if run.font.highlight_color:
+                highlighted_words += len(run.text.split())
+                color = run.font.highlight_color
+                if color not in highlight_colors:
+                    highlight_colors[color] = len(run.text.split())
+                else:
+                    highlight_colors[color] += len(run.text.split())
+    return highlighted_words, highlight_colors, full_word_count
 
-            if run.font.highlight_color:  # Check if the text is highlighted
-                highlighted_word_count += len(words_in_run)
-                highlight_color = run.font.highlight_color
-                color_highlighted_counts[highlight_color] += len(words_in_run)  # Increment color-specific count
-
-    return total_word_count, highlighted_word_count, color_highlighted_counts
-
-# Function to analyze sentiment of the entire document
+# Function to perform sentiment analysis using TextBlob
 def analyze_sentiment(docx_file):
     doc = Document(docx_file)
-    total_polarity = 0
-    total_subjectivity = 0
-    paragraph_count = 0
-
+    full_text = ''
     for para in doc.paragraphs:
-        if para.text.strip():  # Only analyze paragraphs with text
-            blob = TextBlob(para.text)
-            total_polarity += blob.sentiment.polarity
-            total_subjectivity += blob.sentiment.subjectivity
-            paragraph_count += 1
-
-    avg_polarity = total_polarity / paragraph_count if paragraph_count > 0 else 0
-    avg_subjectivity = total_subjectivity / paragraph_count if paragraph_count > 0 else 0
-
-    return avg_polarity, avg_subjectivity
+        full_text += para.text + ' '
+    
+    blob = TextBlob(full_text)
+    polarity = blob.sentiment.polarity  # Range: -1 to 1, where -1 is negative, 0 is neutral, 1 is positive
+    subjectivity = blob.sentiment.subjectivity  # Range: 0 to 1, where 0 is objective and 1 is subjective
+    
+    sentiment_analysis = (
+        f"Polarity: {polarity} (Polarity measures how positive or negative the text is. -1 is very negative, 1 is very positive, and 0 is neutral.)<br>"
+        f"Subjectivity: {subjectivity} (Subjectivity measures how subjective or objective the text is. 0 is very objective, 1 is very subjective.)<br>"
+    )
+    
+    return sentiment_analysis
 
 # Route for homepage
 @app.route('/')
@@ -66,32 +63,32 @@ def upload_and_count():
         return "No selected file"
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
-        filepath = os.path.join('.', filename)
-        file.save(filepath)
+        file.save(os.path.join('.', filename))
         
-        # Get counts and sentiment analysis
-        total_word_count, highlighted_word_count, color_highlighted_counts = count_highlighted_words_by_color(filepath)
-        avg_polarity, avg_subjectivity = analyze_sentiment(filepath)
-        highlighted_percentage = (highlighted_word_count / total_word_count) * 100 if total_word_count > 0 else 0
+        # Get highlighted word count, highlight colors, and full word count
+        highlighted_word_count, highlight_colors, full_word_count = count_highlighted_words(filename)
         
-        # Remove the uploaded file after processing
-        os.remove(filepath)
+        # Get sentiment analysis
+        sentiment_analysis = analyze_sentiment(filename)
         
-        # Prepare the result output
-        result = f"Total Word Count: {total_word_count}\n"
-        result += f"Total Highlighted Word Count: {highlighted_word_count} ({highlighted_percentage:.2f}%)\n\n"
-
-        result += "Highlighted Word Count by Color:\n"
-        for color, count in color_highlighted_counts.items():
-            color_percentage = (count / total_word_count) * 100 if total_word_count > 0 else 0
-            result += f"Color {color}: {count} words ({color_percentage:.2f}%)\n"
+        # Format the highlight count details
+        highlight_color_details = ""
+        for color, count in highlight_colors.items():
+            percentage = (count / full_word_count) * 100 if full_word_count > 0 else 0
+            highlight_color_details += f"Highlighted in {color}: {count} ({percentage:.2f}% of total word count)<br>"
         
-        result += "\nSentiment Analysis of the Document:\n"
-        result += f"Average Polarity: {avg_polarity:.2f} (Polarity ranges from -1 (very negative) to 1 (very positive))\n"
-        result += f"Average Subjectivity: {avg_subjectivity:.2f} (Subjectivity ranges from 0 (objective) to 1 (subjective))\n"
-
-        return result
-
+        # Remove the uploaded file
+        os.remove(filename)  # Clean up uploaded file
+        
+        # Return the results with line breaks and formatting
+        return (
+            f"<h3>Sentiment Analysis:</h3>{sentiment_analysis}"
+            "<br><br>"  # Add space between sections
+            f"<h3>Highlight Count:</h3>"
+            f"Number of highlighted words: {highlighted_word_count} ({(highlighted_word_count/full_word_count)*100:.2f}% of total word count)<br>"
+            f"Total word count: {full_word_count}<br>"
+            f"{highlight_color_details}"
+        )
     return "Invalid file type. Please upload a .docx file."
 
 if __name__ == '__main__':
