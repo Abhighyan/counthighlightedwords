@@ -3,8 +3,10 @@ from docx import Document
 from textblob import TextBlob
 import os
 from werkzeug.utils import secure_filename
+from flask_limiter import Limiter
 
 app = Flask(__name__)
+
 
 ALLOWED_EXTENSIONS = {'docx'}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
