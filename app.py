@@ -41,9 +41,15 @@ def analyze_sentiment(docx_file):
     polarity = blob.sentiment.polarity  # Range: -1 to 1, where -1 is negative, 0 is neutral, 1 is positive
     subjectivity = blob.sentiment.subjectivity  # Range: 0 to 1, where 0 is objective and 1 is subjective
     
+    # Generate HTML for graphical representation (progress bars)
+    polarity_bar = f"<div class='bar'><div class='fill' style='width:{(polarity + 1) * 50}%; background-color: #4CAF50'></div></div>"
+    subjectivity_bar = f"<div class='bar'><div class='fill' style='width:{subjectivity * 100}%; background-color: #2196F3'></div></div>"
+    
     sentiment_analysis = (
-        f"Polarity: {polarity} (Polarity measures how positive or negative the text is. -1 is very negative, 1 is very positive, and 0 is neutral.)<br>"
-        f"Subjectivity: {subjectivity} (Subjectivity measures how subjective or objective the text is. 0 is very objective, 1 is very subjective.)<br>"
+        f"<strong>Polarity: {polarity}</strong> (Polarity measures how positive or negative the text is. -1 is very negative, 1 is very positive, and 0 is neutral.)<br>"
+        f"{polarity_bar}<br><br>"
+        f"<strong>Subjectivity: {subjectivity}</strong> (Subjectivity measures how subjective or objective the text is. 0 is very objective, 1 is very subjective.)<br>"
+        f"{subjectivity_bar}<br>"
     )
     
     return sentiment_analysis
@@ -85,12 +91,14 @@ def upload_and_count():
         
         # Return the results with line breaks and formatting
         return (
+            f"<div class='container'>"
             f"<h3>Sentiment Analysis:</h3>{sentiment_analysis}"
             "<br><br>"  # Add space between sections
             f"<h3>Highlight Count:</h3>"
-            f"Number of highlighted words: {highlighted_word_count} ({highlighted_percentage:.2f}% of total word count)<br>"
-            f"Total word count: {full_word_count}<br>"
-            f"{highlight_color_details}"
+            f"<p><strong>Number of highlighted words:</strong> {highlighted_word_count} ({highlighted_percentage:.2f}% of total word count)</p>"
+            f"<p><strong>Total word count:</strong> {full_word_count}</p>"
+            f"<p>{highlight_color_details}</p>"
+            f"</div>"
         )
     return "Invalid file type. Please upload a .docx file."
 
@@ -98,3 +106,4 @@ if __name__ == '__main__':
     # Use the PORT environment variable provided by Railway
     port = int(os.environ.get('PORT', 8080))
     app.run(host='0.0.0.0', port=port)
+
