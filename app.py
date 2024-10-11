@@ -4,7 +4,7 @@ from werkzeug.utils import secure_filename
 from textblob import TextBlob
 import os
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 
 # Allowable extensions for document upload
 ALLOWED_EXTENSIONS = {'docx'}
