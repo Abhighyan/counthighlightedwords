@@ -14,7 +14,9 @@
         <div class="drop-area" id="drop-area">
             <p>Drag & Drop your .docx file here</p>
         </div>
-
+        
+        <!-- OR select file from device -->
+        <p>or</p>
         <input type="file" id="fileInput" class="file-input" accept=".docx"/>
         <label for="fileInput" class="select-button">Select a file from your device</label>
         
@@ -26,6 +28,7 @@
         const dropArea = document.getElementById('drop-area');
         const fileInput = document.getElementById('fileInput');
         const submitButton = document.getElementById('submit-button');
+        let selectedFile;
 
         // Drag and drop functionality
         dropArea.addEventListener('dragover', (event) => {
@@ -40,27 +43,37 @@
         dropArea.addEventListener('drop', (event) => {
             event.preventDefault();
             dropArea.classList.remove('active');
-            fileInput.files = event.dataTransfer.files;
+            selectedFile = event.dataTransfer.files[0];
+            fileInput.files = event.dataTransfer.files; // Attach file to file input for form submission
+        });
+
+        // Listen to the file input for file selection
+        fileInput.addEventListener('change', (event) => {
+            selectedFile = event.target.files[0];
         });
 
         // File upload logic
         submitButton.addEventListener('click', () => {
-            const file = fileInput.files[0];
-            if (file) {
-                const formData = new FormData();
-                formData.append('file', file);
-                fetch('/upload', {
-                    method: 'POST',
-                    body: formData,
-                })
-                .then(response => response.text())
-                .then(data => {
-                    document.getElementById('message').innerHTML = data;
-                })
-                .catch(error => console.error('Error:', error));
-            } else {
+            if (!selectedFile) {
                 alert('Please select a file.');
+                return;
             }
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('message').innerHTML = data;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('message').innerHTML = 'An error occurred. Please try again.';
+            });
         });
     </script>
 </body>
