@@ -32,6 +32,15 @@ def count_highlighted_words(docx_file):
 
     return highlighted_words, highlighted_word_color_count, full_word_count
 
+# Perform sentiment analysis using TextBlob
+def perform_sentiment_analysis(docx_file):
+    doc = Document(docx_file)
+    full_text = ' '.join(para.text for para in doc.paragraphs)
+    blob = TextBlob(full_text)
+    polarity = blob.sentiment.polarity
+    subjectivity = blob.sentiment.subjectivity
+    return polarity, subjectivity
+
 @app.route('/')
 def upload_file():
     return render_template('upload.html')
@@ -53,6 +62,7 @@ def upload_and_count():
         
         # Perform word count and highlight analysis
         highlighted_word_count, color_counts, full_word_count = count_highlighted_words(file_path)
+        polarity, subjectivity = perform_sentiment_analysis(file_path)  # Sentiment analysis
         os.remove(file_path)  # Clean up uploaded file
 
         color_percentage_details = "<br>".join([
@@ -66,6 +76,8 @@ def upload_and_count():
                        full_word_count=full_word_count, 
                        highlighted_word_count=highlighted_word_count,
                        highlighted_word_percentage=highlighted_word_percentage,
+                       polarity=polarity,
+                       subjectivity=subjectivity,
                        color_percentage_details=color_percentage_details)
 
     return jsonify(status='error', message="Invalid file type. Please upload a .docx file.")
