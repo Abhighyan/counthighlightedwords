@@ -258,7 +258,20 @@
             sentimentInfo.style.display = 'none';
         }
 
-      
+        function getSentimentDescription(polarity) {
+            if (polarity > 0.5) return "Very Positive";
+            if (polarity > 0) return "Slightly Positive";
+            if (polarity < -0.5) return "Very Negative";
+            if (polarity < 0) return "Slightly Negative";
+            return "Neutral";
+        }
+
+        function getSubjectivityDescription(subjectivity) {
+            if (subjectivity > 0.75) return "Very Subjective";
+            if (subjectivity > 0.5) return "Somewhat Subjective";
+            if (subjectivity > 0.25) return "Somewhat Objective";
+            return "Very Objective";
+        }
     </script>
 </body>
 </html>
