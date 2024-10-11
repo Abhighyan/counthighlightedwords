@@ -6,8 +6,9 @@ from werkzeug.utils import secure_filename
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
-app = Flask(__name__)
 limiter = Limiter(app, key_func=get_remote_address)
+
+app = Flask(__name__)
 
 ALLOWED_EXTENSIONS = {'docx'}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
