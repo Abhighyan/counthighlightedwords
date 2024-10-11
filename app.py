@@ -80,12 +80,15 @@ def upload_and_count():
         # Remove the uploaded file
         os.remove(filename)  # Clean up uploaded file
         
+        # Check for division by zero when calculating percentages
+        highlighted_percentage = (highlighted_word_count / full_word_count) * 100 if full_word_count > 0 else 0
+        
         # Return the results with line breaks and formatting
         return (
             f"<h3>Sentiment Analysis:</h3>{sentiment_analysis}"
             "<br><br>"  # Add space between sections
             f"<h3>Highlight Count:</h3>"
-            f"Number of highlighted words: {highlighted_word_count} ({(highlighted_word_count/full_word_count)*100:.2f}% of total word count)<br>"
+            f"Number of highlighted words: {highlighted_word_count} ({highlighted_percentage:.2f}% of total word count)<br>"
             f"Total word count: {full_word_count}<br>"
             f"{highlight_color_details}"
         )
