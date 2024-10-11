@@ -247,7 +247,10 @@
                     <p>Sentiment Polarity: ${data.polarity.toFixed(2)} (${getSentimentDescription(data.polarity)})</p>
                     <p>Subjectivity: ${data.subjectivity.toFixed(2)} (${getSubjectivityDescription(data.subjectivity)})</p>
                     <h4>Highlight Colors:</h4>
-                   ;
+                    ${data.color_percentage_details}
+                </div>
+            `;
+            sentimentInfo.style.display = 'block';
         }
 
         function showMessage(message, type) {
@@ -255,7 +258,7 @@
             sentimentInfo.style.display = 'none';
         }
 
-        
+      
     </script>
 </body>
 </html>
