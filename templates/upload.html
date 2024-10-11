@@ -3,36 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <title>Document Analysis</title>
+    <title>File Upload</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <h1>Document Highlight Analysis</h1>
-        <p>Upload your .docx file for analysis. Drag and drop your file below or click to select a file.</p>
+        <h1>Upload Your Document</h1>
 
-        <!-- Drag and Drop Area -->
-        <div id="drop-area" class="drop-area" onclick="document.getElementById('fileElem').click()">
-            <p>Drop your .docx file here or <span class="file-upload-text">click to browse</span></p>
-            <input type="file" id="fileElem" accept=".docx" onchange="handleFiles(this.files)" style="display: none;">
+        <!-- Drop Area -->
+        <div class="drop-area" id="drop-area">
+            <p>Drag & Drop your .docx file here or click to select</p>
+            <input type="file" id="fileElem" accept=".docx" onchange="handleFiles(this.files)" style="display:none">
+            <label class="file-upload-text" for="fileElem">Select a file</label>
         </div>
 
-        <!-- Submit Button -->
-        <button id="submit-button" class="submit-button" onclick="submitFile()">Analyze</button>
+        <!-- Upload Button -->
+        <button class="submit-button" id="uploadButton" onclick="uploadFile()" disabled>Upload</button>
 
-        <!-- Results Section -->
-        <div id="results" class="results" style="display: none;">
-            <h2>Analysis Results</h2>
-            <div id="highlighted-count"></div>
-            <div id="full-word-count"></div>
-            <div id="sentiment-analysis" style="margin-top: 20px;"></div>
-        </div>
+        <!-- Result Area -->
+        <div class="results" id="results"></div>
     </div>
 
     <script>
-        // Handle drag-and-drop functionality
-        let dropArea = document.getElementById('drop-area');
+        const dropArea = document.getElementById('drop-area');
+        const uploadButton = document.getElementById('uploadButton');
+        let fileToUpload = null;
 
+        // Drag and Drop functionality
         dropArea.addEventListener('dragover', (event) => {
             event.preventDefault();
             dropArea.classList.add('active');
@@ -45,37 +42,38 @@
         dropArea.addEventListener('drop', (event) => {
             event.preventDefault();
             dropArea.classList.remove('active');
-            const files = event.dataTransfer.files;
-            handleFiles(files);
+            fileToUpload = event.dataTransfer.files[0];
+            document.getElementById('fileElem').files = event.dataTransfer.files;
+            enableUploadButton();
         });
 
         function handleFiles(files) {
-            if (files.length) {
-                const file = files[0];
-                document.getElementById('highlighted-count').innerText = `File selected: ${file.name}`;
-                document.getElementById('results').style.display = 'none';
+            fileToUpload = files[0];
+            enableUploadButton();
+        }
+
+        function enableUploadButton() {
+            if (fileToUpload) {
+                uploadButton.disabled = false;
             }
         }
 
-        function submitFile() {
-            const fileInput = document.getElementById('fileElem');
-            if (fileInput.files.length > 0) {
-                const formData = new FormData();
-                formData.append('file', fileInput.files[0]);
+        // Upload the file via fetch
+        function uploadFile() {
+            const formData = new FormData();
+            formData.append('file', fileToUpload);
 
-                fetch('/upload', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.text())
-                .then(data => {
-                    document.getElementById('results').innerHTML = data;
-                    document.getElementById('results').style.display = 'block';
-                })
-                .catch(error => console.error('Error:', error));
-            } else {
-                alert("Please select a file.");
-            }
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            }).then(response => response.text())
+              .then(result => {
+                  document.getElementById('results').innerHTML = result;
+              })
+              .catch(error => {
+                  document.getElementById('results').innerHTML = 'Error uploading file!';
+                  console.error('Error:', error);
+              });
         }
     </script>
 </body>
