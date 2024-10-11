@@ -1,68 +1,79 @@
-body {
-    font-family: 'Arial', sans-serif;
-    background-color: #f5f5f5;
-    color: #333;
-    margin: 0;
-    padding: 20px;
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>Document Analysis</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Document Highlight Analysis</h1>
+        <p>Upload your .docx file for analysis. Drag and drop your file or click to select.</p>
+        <div id="drop-area" class="drop-area">
+            <p>Drop your .docx file here or <span class="file-upload-text">browse</span></p>
+            <input type="file" id="fileElem" accept=".docx" onchange="handleFiles(this.files)" hidden>
+        </div>
+        <button id="submit-button" class="submit-button">Analyze</button>
+        <div id="results" class="results" style="display: none;">
+            <h2>Analysis Results</h2>
+            <div id="highlighted-count"></div>
+            <div id="full-word-count"></div>
+            <div id="sentiment-analysis" style="margin-top: 20px;"></div>
+        </div>
+    </div>
 
-.container {
-    max-width: 600px;
-    margin: auto;
-    padding: 20px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
+    <script>
+        // Handle drag-and-drop functionality
+        let dropArea = document.getElementById('drop-area');
 
-h1 {
-    font-size: 24px;
-    margin-bottom: 10px;
-}
+        dropArea.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            dropArea.classList.add('active');
+        });
 
-p {
-    font-size: 16px;
-    margin-bottom: 20px;
-}
+        dropArea.addEventListener('dragleave', () => {
+            dropArea.classList.remove('active');
+        });
 
-.drop-area {
-    border: 2px dashed #ccc;
-    border-radius: 8px;
-    padding: 20px;
-    text-align: center;
-    transition: background-color 0.3s;
-}
+        dropArea.addEventListener('drop', (event) => {
+            event.preventDefault();
+            dropArea.classList.remove('active');
+            const files = event.dataTransfer.files;
+            handleFiles(files);
+        });
 
-.drop-area.active {
-    background-color: #e0e0e0;
-}
+        dropArea.addEventListener('click', () => {
+            document.getElementById('fileElem').click();
+        });
 
-.file-upload-text {
-    color: #007bff;
-    cursor: pointer;
-    text-decoration: underline;
-}
+        function handleFiles(files) {
+            if (files.length) {
+                const file = files[0];
+                document.getElementById('highlighted-count').innerText = `File: ${file.name}`;
+                document.getElementById('results').style.display = 'block';
+            }
+        }
 
-.submit-button {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
-    margin-top: 20px;
-    display: inline-block;
-}
-
-.submit-button:hover {
-    background-color: #0056b3;
-}
-
-.results {
-    margin-top: 20px;
-    padding: 20px;
-    background: #f9f9f9;
-    border-radius: 8px;
-    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
-}
+        document.getElementById('submit-button').addEventListener('click', () => {
+            const fileInput = document.getElementById('fileElem');
+            if (fileInput.files.length > 0) {
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+                
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('results').innerHTML += data;
+                })
+                .catch(error => console.error('Error:', error));
+            } else {
+                alert("Please select a file.");
+            }
+        });
+    </script>
+</body>
+</html>
