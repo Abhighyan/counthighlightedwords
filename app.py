@@ -3,10 +3,7 @@ from docx import Document
 from textblob import TextBlob
 import os
 from werkzeug.utils import secure_filename
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 
-limiter = Limiter(app, key_func=get_remote_address)
 
 app = Flask(__name__)
 
@@ -43,7 +40,6 @@ def upload_file():
     return render_template('upload.html')
 
 @app.route('/upload', methods=['POST'])
-@limiter.limit("10 per minute")
 def upload_and_count():
     if 'file' not in request.files:
         return jsonify(status='error', message="No file part")
